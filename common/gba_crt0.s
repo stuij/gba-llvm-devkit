@@ -76,23 +76,23 @@ start_vector:
 	.thumb
 
 	ldr	r0, =__text_start
-	lsl	r0, #5				@ Was code compiled at 0x08000000 or higher?
+	lsls	r0, #5				@ Was code compiled at 0x08000000 or higher?
 	bcs     DoEWRAMClear			@ yes, you can not run it in external WRAM
 
 	mov     r0, pc
-	lsl     r0, #5				@ Are we running from ROM (0x8000000 or higher) ?
+	lsls    r0, #5				@ Are we running from ROM (0x8000000 or higher) ?
 	bcc     SkipEWRAMClear			@ No, so no need to do a copy.
 
 @---------------------------------------------------------------------------------
 @ We were started in ROM, silly emulators. :P
 @ So we need to copy to ExWRAM.
 @---------------------------------------------------------------------------------
-	mov	r2, #2
-	lsl	r2, r2, #24			@ r2= 0x02000000
+	movs	r2, #2
+	lsls	r2, #24			@ r2= 0x02000000
 	ldr	r3, =__end__			@ last ewram address
-	sub	r3, r2				@ r3= actual binary size
-	mov	r6, r2				@ r6= 0x02000000
-	lsl	r1, r2, #2			@ r1= 0x08000000
+	subs	r3, r2				@ r3= actual binary size
+	movs	r6, r2				@ r6= 0x02000000
+	lsls	r1, r2, #2			@ r1= 0x08000000
 
 	bl	CopyMem
 
@@ -101,9 +101,9 @@ start_vector:
 @---------------------------------------------------------------------------------
 DoEWRAMClear:					@ Clear External WRAM to 0x00
 @---------------------------------------------------------------------------------
-	mov	r1, #0x40
-	lsl	r1, #12				@ r1 = 0x40000
-	lsl	r0, r1, #7			@ r0 = 0x2000000
+	movs	r1, #0x40
+	lsls	r1, #12				@ r1 = 0x40000
+	lsls	r0, r1, #7			@ r0 = 0x2000000
 	bl	ClearMem
 
 @---------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ SkipEWRAMClear:					@ Clear Internal WRAM to 0x00
 @---------------------------------------------------------------------------------
 	ldr	r0, =__bss_start__
 	ldr	r1, =__bss_end__
-	sub	r1, r0
+	subs	r1, r0
 	bl	ClearMem
 
 @---------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ SkipEWRAMClear:					@ Clear Internal WRAM to 0x00
 @---------------------------------------------------------------------------------
 	ldr	r0, =__sbss_start__
 	ldr	r1, =__sbss_end__
-	sub	r1, r0
+	subs	r1, r0
 	bl	ClearMem
 
 @---------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ SkipEWRAMClear:					@ Clear Internal WRAM to 0x00
 @---------------------------------------------------------------------------------
 	ldr	r2,= __load_stop_iwram0
 	ldr	r1,= __load_start_iwram0
-	sub	r3, r2, r1			@ Is there any data to copy?
+	subs	r3, r2, r1			@ Is there any data to copy?
 	beq	CIW0Skip			@ no
 
 	ldr	r2,= __iwram_overlay_start
@@ -178,8 +178,8 @@ CEW0Skip:
 @---------------------------------------------------------------------------------
 @ Jump to user code
 @---------------------------------------------------------------------------------
-	mov	r0, #0				@ int argc
-	mov	r1, #0				@ char	*argv[]
+	movs	r0, #0				@ int argc
+	movs	r1, #0				@ char	*argv[]
 	ldr	r3, =main
 	bl	_blx_r3_stub
 
@@ -193,18 +193,18 @@ CEW0Skip:
 @---------------------------------------------------------------------------------
 ClearMem:
 @---------------------------------------------------------------------------------
-	mov	r2,#3				@ These	commands are used in cases where
-	add	r1,r2				@ the length is	not a multiple of 4,
-	bic	r1,r2				@ even though it should be.
+	movs	r2,#3				@ These	commands are used in cases where
+	adds	r1,r2				@ the length is	not a multiple of 4,
+	bics	r1, r1, r2				@ even though it should be.
 
 	beq	ClearMX				@ Length is zero so exit
 
-	mov	r2,#0
+	movs	r2,#0
 @---------------------------------------------------------------------------------
 ClrLoop:
 @---------------------------------------------------------------------------------
 	stmia	r0!, {r2}
-	sub	r1,#4
+	subs	r1,#4
 	bne	ClrLoop
 @---------------------------------------------------------------------------------
 ClearMX:
@@ -225,7 +225,7 @@ _blx_r3_stub:
 @---------------------------------------------------------------------------------
 CopyMemChk:
 @---------------------------------------------------------------------------------
-	sub	r3, r4, r2			@ Is there any data to copy?
+	subs	r3, r4, r2			@ Is there any data to copy?
 @---------------------------------------------------------------------------------
 @ Copy memory
 @---------------------------------------------------------------------------------
@@ -235,9 +235,9 @@ CopyMemChk:
 @---------------------------------------------------------------------------------
 CopyMem:
 @---------------------------------------------------------------------------------
-	mov	r0, #3				@ These commands are used in cases where
-	add	r3, r0				@ the length is not a multiple	of 4,
-	bic	r3, r0				@ even	though it should be.
+	movs	r0, #3				@ These commands are used in cases where
+	adds	r3, r0				@ the length is not a multiple	of 4,
+	bics	r3, r0				@ even	though it should be.
 	beq	CIDExit				@ Length is zero so exit
 
 @---------------------------------------------------------------------------------
@@ -245,7 +245,7 @@ CIDLoop:
 @---------------------------------------------------------------------------------
 	ldmia	r1!, {r0}
 	stmia	r2!, {r0}
-	sub	r3, #4
+	subs	r3, #4
 	bne	CIDLoop
 @---------------------------------------------------------------------------------
 CIDExit:
