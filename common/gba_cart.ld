@@ -12,15 +12,26 @@
 /*         support added to allow labels end, _end, */
 /*         & __end__ to point to end of iwram or    */
 /*         the end of ewram.                        */
-/*	Additions by WinterMute				*/
-/* v1.4 -	.sbss section added for unitialised	*/
-/*		    data in ewram 			*/
-/* v1.5 -	padding section added to stop EZF 	*/
-/*		    stripping important data		*/
+/*	Additions by WinterMute                         */
+/* v1.4 -	.sbss section added for unitialised     */
+/*		    data in ewram                           */
+/* v1.5 -	padding section added to stop EZF       */
+/*		    stripping important data                */
+/* Changes by Ties Stuij to make work with Clang    */
+/* v1.6 - Removed overlays for now as LLD can't     */
+/*          handle the overlay syntax.              */
+/*          Picolibc expects different heap         */
+/*          symbols.                                */
+/*          Provide __arm32_tls_tcb_offset as this  */
+/*          is expected by Picolibc.                */
+/*          Add support for different C++ sections  */
+/*          that need to be included.               */
+/*          Changed .bss and .sbss section syntax   */
+/*          as LLD didn't accept those.             */
 
 /* This file is released into the public domain		*/
 /* for commercial or non-commercial use with no		*/
-/* restrictions placed upon it.				*/
+/* restrictions placed upon it.                     */
 
 /* NOTE!!!: This linker script defines the RAM &  */
 /*   ROM start addresses. In order for it to work */
@@ -58,11 +69,14 @@ MEMORY {
 
 __text_start	=	ORIGIN(rom);
 __eheap_end	=	ORIGIN(ewram) + LENGTH(ewram);
+__heap_end = __eheap_end;
 __iwram_start	=	ORIGIN(iwram);
 __iwram_top	=	ORIGIN(iwram) + LENGTH(iwram);;
 __sp_irq	=	__iwram_top - 0x060;
 __sp_usr	=	__sp_irq - 0x0a0;
 __irq_flags	=	0x03007ff8;
+
+PROVIDE(__arm32_tls_tcb_offset = 0);
 
 SECTIONS
 {
@@ -110,6 +124,14 @@ SECTIONS
 		*(.roda)
 		*(.rodata.*)
 		*(.gnu.linkonce.r*)
+		*(.rdata)
+		*(.srodata.cst16)
+		*(.srodata.cst8)
+		*(.srodata.cst4)
+		*(.srodata.cst2)
+		*(.srodata .srodata.*)
+		*(.data.rel.ro .data.rel.ro.*)
+
 		SORT(CONSTRUCTORS)
 		. = ALIGN(4);   /* REQUIRED. LD is flaky without it. */
 	} >rom = 0xff
@@ -166,9 +188,9 @@ SECTIONS
 		__iwram_end__ = ABSOLUTE(.) ;
 	} >iwram = 0xff
 
-	__data_lma = __iwram_lma + SIZEOF(.iwram) ;
+	__bss_lma = __iwram_lma + SIZEOF(.iwram) ;
 
-	.bss ALIGN(4) (NOLOAD) :
+	.bss ALIGN(4) (NOLOAD) : AT (__bss_lma)
 	{
 		__bss_start = ABSOLUTE(.);
 		__bss_start__ = ABSOLUTE(.);
@@ -179,7 +201,9 @@ SECTIONS
 		. = ALIGN(4);    /* REQUIRED. LD is flaky without it. */
 		__bss_end__ = ABSOLUTE(.);
 
-	} AT>iwram
+	} >iwram
+
+	__data_lma = __bss_lma + SIZEOF(.bss) ;
 
 	.data ALIGN(4) : AT (__data_lma)
 	{
@@ -188,7 +212,7 @@ SECTIONS
 		*(.gnu.linkonce.d*)
 		CONSTRUCTORS
 		. = ALIGN(4);
-	} >iwram = 0xff
+	} >iwram
 
 	__preinit_lma = __data_lma + SIZEOF(.data);
 
@@ -223,26 +247,7 @@ SECTIONS
 	.jcr        ALIGN(4)    : AT (__jcr_lma) { KEEP (*(.jcr)) } >iwram
 
 	__data_end__  =  ABSOLUTE(.);
-	__iwram_overlay_lma = __jcr_lma + SIZEOF(.jcr);
-
-	__iwram_overlay_start = . ;
-
-	OVERLAY ALIGN(4) : NOCROSSREFS AT (__iwram_overlay_lma)
-	{
-		.iwram0 { *(.iwram0) . = ALIGN(4);}
-		.iwram1 { *(.iwram1) . = ALIGN(4);}
-		.iwram2 { *(.iwram2) . = ALIGN(4);}
-		.iwram3 { *(.iwram3) . = ALIGN(4);}
-		.iwram4 { *(.iwram4) . = ALIGN(4);}
-		.iwram5 { *(.iwram5) . = ALIGN(4);}
-		.iwram6 { *(.iwram6) . = ALIGN(4);}
-		.iwram7 { *(.iwram7) . = ALIGN(4);}
-		.iwram8 { *(.iwram8) . = ALIGN(4);}
-		.iwram9 { *(.iwram9) . = ALIGN(4);}
-	}>iwram = 0xff
-
-	__iwram_overlay_end = . ;
-	__ewram_lma = __iwram_overlay_lma + (__iwram_overlay_end - __iwram_overlay_start) ;
+	__ewram_lma = __jcr_lma + SIZEOF(.jcr);
 
 	__iheap_start = . ;
 
@@ -252,19 +257,23 @@ SECTIONS
 		*(.ewram*)
 		. = ALIGN(4);  /* REQUIRED. LD is flaky without it. */
 		__ewram_end = ABSOLUTE(.);
+        __end__ = ABSOLUTE(.);
+		__eheap_start = ABSOLUTE(.);
+        PROVIDE(__heap_start = __eheap_start);
 	}>ewram = 0xff
 
-	__pad_lma = __ewram_lma + SIZEOF(.ewram);
+	__sbss_lma = __ewram_lma + SIZEOF(.ewram);
 
-	.sbss ALIGN(4)(NOLOAD):
- 	{
+	.sbss ALIGN(4) (NOLOAD) : AT (__sbss_lma)
+	{
 		__sbss_start__ = ABSOLUTE(.);
- 		*(.sbss*)
- 		. = ALIGN(4);
-		__sbss_end__  = ABSOLUTE(.);
-		__end__ = ABSOLUTE(.);
-		__eheap_start = ABSOLUTE(.);
- 	} AT>ewram
+		*(.sbss*)
+		. = ALIGN(4);
+		__sbss_end__ = ABSOLUTE(.);
+
+	} >ewram
+
+	__pad_lma = __sbss_lma + SIZEOF(.sbss);
 
 	/* EZF Advance strips trailing 0xff bytes, add a pad section so nothing important is removed */
 	.pad ALIGN(4) : AT (__pad_lma)
