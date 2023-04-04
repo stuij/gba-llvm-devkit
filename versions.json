@@ -1,0 +1,13 @@
+{
+  "comment": [
+    "Set your preferred repo versions.",
+    "This file is queried by CMake and other automation software."
+  ],
+  "repos": {
+    "bmt": {
+      "comment": "tagType can be branch, tag or commithash",
+      "tagType": "branch",
+      "tag": "main"
+    }
+  }
+}
