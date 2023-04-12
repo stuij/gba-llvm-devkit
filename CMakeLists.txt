@@ -62,11 +62,14 @@ function(read_repo_version output_variable_prefix repo)
     if(tagType STREQUAL "commithash")
         # GIT_SHALLOW doesn't work with commit hashes.
         set(shallow OFF)
-    elseif(tagType STREQUAL "tag" OR tagType STREQUAL "branch")
+    elseif(tagType STREQUAL "branch")
         set(shallow ON)
         # CMake docs recommend that "branch names and tags should
         # generally be specified as remote names"
         set(tag "origin/${tag}")
+    elseif(tagType STREQUAL "tag")
+        set(shallow ON)
+        set(tag "${tag}")
     else()
         message(FATAL_ERROR "Unrecognised tagType ${tagType}")
     endif()
@@ -81,15 +84,29 @@ FetchContent_Declare(bmt
     GIT_TAG "${bmt_TAG}"
     GIT_SHALLOW "${bmt_SHALLOW}"
     GIT_PROGRESS TRUE
-    PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
+    # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
     # Add the llvm subdirectory later to ensure that
-    # LLVMEmbeddedToolchainForArm is the first project declared.
+    # BMT is the first project declared.
     # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
     # can't be used.
     SOURCE_SUBDIR do_not_add_bmt_subdir_yet
 )
 
+FetchContent_Declare(tools
+    GIT_REPOSITORY https://github.com/devkitPro/gba-tools
+    GIT_TAG "${tools_TAG}"
+    GIT_SHALLOW "${tools_SHALLOW}"
+    GIT_PROGRESS TRUE
+    # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
+    # Add the llvm subdirectory later to ensure that
+    # LLVMEmbeddedToolchainForArm is the first project declared.
+    # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
+    # can't be used.
+    SOURCE_SUBDIR do_not_add_tools_subdir_yet
+)
+
 FetchContent_MakeAvailable(bmt)
+FetchContent_MakeAvailable(tools)
 
 project(
     gba-llvm
@@ -145,9 +162,85 @@ install(
 # Groups all the targets that comprise the toolchain.
 add_custom_target(bmt ALL)
 
-
-
 #add_dependencies(
 #    bmt
 # .. some other dependencies
 #)
+
+ExternalProject_Add(
+  tools
+  SOURCE_DIR ${tools_SOURCE_DIR}
+  CONFIGURE_COMMAND ${tools_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/gba-tools
+  PREFIX gba-tools
+  BUILD_COMMAND make
+  INSTALL_COMMAND make install
+)
+
+ExternalProject_Add_Step(
+  tools prepare_configure
+  WORKING_DIRECTORY ${tools_SOURCE_DIR}
+  COMMAND aclocal
+  COMMAND autoconf
+  COMMAND automake --add-missing
+  DEPENDERS configure
+)
+
+set(config "armv4t-gba.cfg")
+set(gba_sources ${CMAKE_SOURCE_DIR}/common)
+set(common ${CMAKE_SOURCE_DIR}/common)
+
+set(target_triple "armv4t-none-eabi")
+set(target_flags "-march=armv4t -fno-exceptions -fno-rtti --sysroot ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t")
+
+ExternalProject_Add(
+  gba_sources
+  SOURCE_DIR ${gba_sources}
+  PREFIX gba_sources
+  DEPENDS llvm-toolchain
+  CMAKE_ARGS
+  -DCMAKE_AR=${LLVM_BINARY_DIR}/bin/llvm-ar${CMAKE_EXECUTABLE_SUFFIX}
+  -DCMAKE_ASM_COMPILER_TARGET=${target_triple}
+  -DCMAKE_ASM_FLAGS=${target_flags}
+  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_CXX_COMPILER=${LLVM_BINARY_DIR}/bin/clang++${CMAKE_EXECUTABLE_SUFFIX}
+  -DCMAKE_CXX_COMPILER_TARGET=${target_triple}
+  -DCMAKE_CXX_FLAGS=${target_flags}
+  -DCMAKE_C_COMPILER=${LLVM_BINARY_DIR}/bin/clang${CMAKE_EXECUTABLE_SUFFIX}
+  -DCMAKE_C_COMPILER_TARGET=${target_triple}
+  -DCMAKE_C_FLAGS=${target_flags}
+  -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+  -DCMAKE_NM=${LLVM_BINARY_DIR}/bin/llvm-nm${CMAKE_EXECUTABLE_SUFFIX}
+  -DCMAKE_RANLIB=${LLVM_BINARY_DIR}/bin/llvm-ranlib${CMAKE_EXECUTABLE_SUFFIX}
+  # Let CMake know we're cross-compiling
+  -DCMAKE_SYSTEM_NAME=Generic
+)
+
+ExternalProject_Add_Step(
+  gba_sources install_config
+  COMMAND ${CMAKE_COMMAND} -E copy ${common}/${config} ${LLVM_BINARY_DIR}/bin
+  DEPENDERS configure
+)
+
+install(
+  FILES
+  ${common}/${config}
+  DESTINATION bin
+  COMPONENT llvm-toolchain
+)
+
+install(
+  FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/gba_crt0.o
+  ${common}/gba_cart.ld
+  DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/lib
+  COMPONENT llvm-toolchain
+)
+
+install(
+  DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/bin/
+  DESTINATION bin
+  COMPONENT llvm-toolchain
+  FILES_MATCHING PATTERN "*"
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+)
