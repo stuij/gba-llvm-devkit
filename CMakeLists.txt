@@ -22,7 +22,7 @@
 #   mkdir repos
 #   git -C repos clone https://github.com/stuij/gba-llvm.git
 #   git -C repos clone https://github.com/devkitPro/gba-tools.git
-#   git -C repos clone https://github.com/devkitPro/libtonc.git
+#   git -C repos clone https://github.com/stuij/libtonc.git
 #   mkdir build
 #   cd build
 #   cmake .. -GNinja -DFETCHCONTENT_SOURCE_DIR_LLVMPROJECT=../repos/llvm-project -DFETCHCONTENT_SOURCE_DIR_PICOLIBC=../repos/picolibc
@@ -105,8 +105,22 @@ FetchContent_Declare(tools
     SOURCE_SUBDIR do_not_add_tools_subdir_yet
 )
 
+FetchContent_Declare(libtonc
+    GIT_REPOSITORY https://github.com/stuij/libtonc
+    GIT_TAG "${libtonc_TAG}"
+    GIT_SHALLOW "${libtonc_SHALLOW}"
+    GIT_PROGRESS TRUE
+    # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
+    # Add the llvm subdirectory later to ensure that
+    # LLVMEmbeddedToolchainForArm is the first project declared.
+    # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
+    # can't be used.
+    SOURCE_SUBDIR do_not_add_libtonc_subdir_yet
+)
+
 FetchContent_MakeAvailable(bmt)
 FetchContent_MakeAvailable(tools)
+FetchContent_MakeAvailable(libtonc)
 
 project(
     gba-llvm
@@ -173,7 +187,7 @@ ExternalProject_Add(
   CONFIGURE_COMMAND ${tools_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/gba-tools
   PREFIX gba-tools
   BUILD_COMMAND make
-  INSTALL_COMMAND make install
+  INSTALL_COMMAND make install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}
 )
 
 ExternalProject_Add_Step(
@@ -183,6 +197,14 @@ ExternalProject_Add_Step(
   COMMAND autoconf
   COMMAND automake --add-missing
   DEPENDERS configure
+)
+
+ExternalProject_Add(
+  libtonc
+  SOURCE_DIR ${libtonc_SOURCE_DIR}
+  PREFIX libtonc
+  BUILD_COMMAND make
+  INSTALL_COMMAND make install DESTDIR=${CMAKE_INSTALL_PREFIX}
 )
 
 set(config "armv4t-gba.cfg")
