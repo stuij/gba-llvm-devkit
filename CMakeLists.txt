@@ -149,6 +149,15 @@ set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${processor_name}")
 
 set(LLVM_TOOLCHAIN_LIBRARY_VARIANTS armv4t)
 
+set(LLVM_ENABLE_PROJECTS clang;lld;lldb CACHE STRING "")
+set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
+# on MacOS we get warnings that LLDB tests won't pass properly
+# because of code signing. We disregard for now and see what happens.
+# set(LLDB_USE_SYSTEM_DEBUGSERVER ON CACHE STRING "")
+# We need libcxx for testing but libcxx is added as an external project
+# in the embedded toolchain configuration. So we go without for now.
+set(LLDB_INCLUDE_TESTS OFF CACHE INTERNAL "")
+
 add_subdirectory(
     ${bmt_SOURCE_DIR}
 )
