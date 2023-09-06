@@ -22,7 +22,6 @@
 #   mkdir repos
 #   git -C repos clone https://github.com/stuij/gba-llvm.git
 #   git -C repos clone https://github.com/devkitPro/gba-tools.git
-#   git -C repos clone https://github.com/stuij/libtonc.git
 #   mkdir build
 #   cd build
 #   cmake .. -GNinja -DFETCHCONTENT_SOURCE_DIR_LLVMPROJECT=../repos/llvm-project -DFETCHCONTENT_SOURCE_DIR_PICOLIBC=../repos/picolibc
@@ -105,22 +104,8 @@ FetchContent_Declare(tools
     SOURCE_SUBDIR do_not_add_tools_subdir_yet
 )
 
-FetchContent_Declare(libtonc
-    GIT_REPOSITORY https://github.com/stuij/libtonc
-    GIT_TAG "${libtonc_TAG}"
-    GIT_SHALLOW "${libtonc_SHALLOW}"
-    GIT_PROGRESS TRUE
-    # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
-    # Add the llvm subdirectory later to ensure that
-    # LLVMEmbeddedToolchainForArm is the first project declared.
-    # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
-    # can't be used.
-    SOURCE_SUBDIR do_not_add_libtonc_subdir_yet
-)
-
 FetchContent_MakeAvailable(bmt)
 FetchContent_MakeAvailable(tools)
-FetchContent_MakeAvailable(libtonc)
 
 project(
     gba-llvm
@@ -150,6 +135,7 @@ set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 set(CPACK_STRIP_FILES TRUE)
 # When extracting the files put them in an ArmCompiler-.../ directory.
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY TRUE)
+set(CPACK_PACKAGE_NAME "gba-llvm")
 
 string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} processor_name)
 string(REGEX MATCH "amd64|x64|x86" x86_match ${processor_name})
@@ -199,14 +185,6 @@ ExternalProject_Add_Step(
   DEPENDERS configure
 )
 
-ExternalProject_Add(
-  libtonc
-  SOURCE_DIR ${libtonc_SOURCE_DIR}
-  PREFIX libtonc
-  BUILD_COMMAND make
-  INSTALL_COMMAND make install DESTDIR=${CMAKE_INSTALL_PREFIX}
-)
-
 set(config "armv4t-gba.cfg")
 set(gba_sources ${CMAKE_SOURCE_DIR}/common)
 set(common ${CMAKE_SOURCE_DIR}/common)
@@ -220,6 +198,7 @@ ExternalProject_Add(
   PREFIX gba_sources
   DEPENDS llvm-toolchain
   CMAKE_ARGS
+  -DLLVM_BINARY_DIR=${LLVM_BINARY_DIR}
   -DCMAKE_AR=${LLVM_BINARY_DIR}/bin/llvm-ar${CMAKE_EXECUTABLE_SUFFIX}
   -DCMAKE_ASM_COMPILER_TARGET=${target_triple}
   -DCMAKE_ASM_FLAGS=${target_flags}
@@ -235,6 +214,7 @@ ExternalProject_Add(
   -DCMAKE_RANLIB=${LLVM_BINARY_DIR}/bin/llvm-ranlib${CMAKE_EXECUTABLE_SUFFIX}
   # Let CMake know we're cross-compiling
   -DCMAKE_SYSTEM_NAME=Generic
+  INSTALL_COMMAND echo "nop"
 )
 
 ExternalProject_Add_Step(
@@ -260,9 +240,24 @@ install(
 
 install(
   DIRECTORY
-  ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/bin/
+  ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/src/tools-build/
   DESTINATION bin
   COMPONENT llvm-toolchain
-  FILES_MATCHING PATTERN "*"
+  FILES_MATCHING PATTERN "*gb*"
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+)
+
+install(
+  FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/libtonc/lib/libtonc.a
+  DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/lib
+  COMPONENT llvm-toolchain
+)
+
+install(
+  DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/libtonc/include/
+  DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/include
+  COMPONENT llvm-toolchain
+  FILES_MATCHING PATTERN "*"
 )
