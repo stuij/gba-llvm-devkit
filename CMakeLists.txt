@@ -104,8 +104,22 @@ FetchContent_Declare(tools
     SOURCE_SUBDIR do_not_add_tools_subdir_yet
 )
 
+FetchContent_Declare(grit
+    GIT_REPOSITORY https://github.com/devkitPro/grit
+    GIT_TAG "${grit_TAG}"
+    GIT_SHALLOW "${grit_SHALLOW}"
+    GIT_PROGRESS TRUE
+    # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
+    # Add the llvm subdirectory later to ensure that
+    # LLVMEmbeddedToolchainForArm is the first project declared.
+    # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
+    # can't be used.
+    SOURCE_SUBDIR do_not_add_grit_subdir_yet
+)
+
 FetchContent_MakeAvailable(bmt)
 FetchContent_MakeAvailable(tools)
+FetchContent_MakeAvailable(grit)
 
 project(
     gba-llvm
@@ -188,6 +202,25 @@ ExternalProject_Add(
 ExternalProject_Add_Step(
   tools prepare_configure
   WORKING_DIRECTORY ${tools_SOURCE_DIR}
+  COMMAND aclocal
+  COMMAND autoconf
+  COMMAND automake --add-missing
+  DEPENDERS configure
+)
+
+ExternalProject_Add(
+  grit
+  SOURCE_DIR ${grit_SOURCE_DIR}
+  CONFIGURE_COMMAND CXX="gcc -std=cxx14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
+  PREFIX grit
+  BUILD_COMMAND make
+  INSTALL_COMMAND make install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}
+)
+
+ExternalProject_Add_Step(
+  grit prepare_configure
+  WORKING_DIRECTORY ${grit_SOURCE_DIR}
+  COMMAND glibtoolize
   COMMAND aclocal
   COMMAND autoconf
   COMMAND automake --add-missing
