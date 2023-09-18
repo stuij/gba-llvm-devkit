@@ -46,4 +46,4 @@ $(COREMARK_BG_ASM): $(COREMARK_BG)
 .PHONY: clean
 
 clean:
-	rm $(NAME).elf $(NAME).gba *.h *.s
+	rm $(NAME).elf $(NAME).gba pointer*  gba-cpu* coremark*
