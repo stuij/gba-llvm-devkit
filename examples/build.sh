@@ -13,6 +13,6 @@ $TOOLS/gbafix test.gba
 
 # build the C++ program
 $CLANG_PP --config $CONFIG -c -o test_cpp.o test.cpp
-$CLANG_PP --config $CONFIG -T $LD_SCRIPT -o test_cpp.elf test_cpp.o
+$CLANG_PP --config $CONFIG -T $LD_SCRIPT -o test_cpp.elf test_cpp.o -D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT
 $TOOLS/llvm-objcopy -O binary test_cpp.elf test_cpp.gba
 $TOOLS/gbafix test_cpp.gba
