@@ -211,7 +211,7 @@ ExternalProject_Add_Step(
 ExternalProject_Add(
   grit
   SOURCE_DIR ${grit_SOURCE_DIR}
-  CONFIGURE_COMMAND CXX="gcc -std=cxx14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LDFLAGS=-L/opt/homebrew/lib "CXX=g++ -std=c++14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
   PREFIX grit
   BUILD_COMMAND make
   INSTALL_COMMAND make install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}
@@ -286,6 +286,15 @@ install(
   DESTINATION bin
   COMPONENT llvm-toolchain
   FILES_MATCHING PATTERN "*gb*"
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+)
+
+install(
+  DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/grit/src/grit-build/
+  DESTINATION bin
+  COMPONENT llvm-toolchain
+  FILES_MATCHING PATTERN "grit"
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
 )
 
