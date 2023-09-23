@@ -161,8 +161,6 @@ endif()
 
 set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${processor_name}")
 
-set(LLVM_TOOLCHAIN_LIBRARY_VARIANTS ON CACHE INTERNAL armv4t)
-
 set(LLVM_ENABLE_PROJECTS clang;lld;lldb CACHE STRING "")
 set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
 # on MacOS we get warnings that LLDB tests won't pass properly
@@ -172,6 +170,8 @@ set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
 # in the embedded toolchain configuration. So we go without for now.
 set(LLDB_INCLUDE_TESTS OFF CACHE INTERNAL "")
 
+set(LLVM_TOOLCHAIN_LIBRARY_VARIANTS armv4t CACHE INTERNAL "")
+
 add_subdirectory(
     ${bmt_SOURCE_DIR}
 )
@@ -179,24 +179,21 @@ add_subdirectory(
 install(
     FILES
     DESTINATION .
-    COMPONENT bmt
+    COMPONENT llvm-toolchain
 )
 
 # Groups all the targets that comprise the toolchain.
 add_custom_target(bmt ALL)
 
-#add_dependencies(
-#    bmt
-# .. some other dependencies
-#)
-
 ExternalProject_Add(
   tools
+  DEPENDS llvm-toolchain
   SOURCE_DIR ${tools_SOURCE_DIR}
   CONFIGURE_COMMAND ${tools_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/gba-tools
   PREFIX gba-tools
   BUILD_COMMAND make
-  INSTALL_COMMAND make install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}
+  INSTALL_COMMAND ""
+  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/src/tools-build/gbafix
 )
 
 ExternalProject_Add_Step(
@@ -208,13 +205,22 @@ ExternalProject_Add_Step(
   DEPENDERS configure
 )
 
+foreach(cmd gbafix gbalzss gbfs insgbfs lsgbfs ungbfs)
+  ExternalProject_Add_Step(
+    tools ${cmd}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/src/tools-build/${cmd} ${LLVM_BINARY_DIR}/bin
+    DEPENDEES build
+  )
+endforeach()
+
 ExternalProject_Add(
   grit
+  DEPENDS llvm-toolchain
   SOURCE_DIR ${grit_SOURCE_DIR}
   CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LDFLAGS=-L/opt/homebrew/lib "CXX=g++ -std=c++14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
   PREFIX grit
   BUILD_COMMAND make
-  INSTALL_COMMAND make install DESTDIR=${CMAKE_CURRENT_BINARY_DIR}
+  INSTALL_COMMAND ""
 )
 
 ExternalProject_Add_Step(
@@ -225,6 +231,12 @@ ExternalProject_Add_Step(
   COMMAND autoconf
   COMMAND automake --add-missing
   DEPENDERS configure
+)
+
+ExternalProject_Add_Step(
+  grit put_files
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/grit/src/grit-build/grit ${LLVM_BINARY_DIR}/bin
+  DEPENDEES build
 )
 
 set(config "armv4t-gba.cfg")
@@ -273,42 +285,26 @@ install(
 )
 
 install(
-  FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/gba_crt0.o
-  ${common}/gba_cart.ld
-  DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/lib
-  COMPONENT llvm-toolchain
+  DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/grit/src/grit-build/
+  DESTINATION bin
+  COMPONENT llvm_toolchain
+  FILES_MATCHING PATTERN "grit"
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
 )
 
 install(
   DIRECTORY
   ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/src/tools-build/
   DESTINATION bin
-  COMPONENT llvm-toolchain
+  COMPONENT llvm_toolchain
   FILES_MATCHING PATTERN "*gb*"
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
 )
 
 install(
-  DIRECTORY
-  ${CMAKE_CURRENT_BINARY_DIR}/grit/src/grit-build/
-  DESTINATION bin
-  COMPONENT llvm-toolchain
-  FILES_MATCHING PATTERN "grit"
-  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-)
-
-install(
   FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/libtonc/lib/libtonc.a
-  DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/lib
-  COMPONENT llvm-toolchain
-)
-
-install(
-  DIRECTORY
-  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/libtonc/include/
-  DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/include
-  COMPONENT llvm-toolchain
-  FILES_MATCHING PATTERN "*"
+  ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/aas-src/build/conv2aas/conv2aas
+  DESTINATION bin
+  COMPONENT llvm_toolchain
 )
