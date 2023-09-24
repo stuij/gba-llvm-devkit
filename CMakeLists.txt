@@ -20,7 +20,15 @@
 #   mkdir build
 #   cd build
 #   cmake .. -GNinja -DFETCHCONTENT_QUIET=OFF
+#   ninja
 #   ninja install
+#
+# This will create a functional toolchain in the 'build/install' dir.
+#
+# Note that LLVM-wise this installs the kitchen sink.
+# If you want to install a lean release, do:
+#
+#   ninja install-llvm-toolchain
 
 # address some MacOs compatibility issues
 # * On MacOs, for libtool, the convention is to rename libtool(ize) to
@@ -33,6 +41,37 @@ else()
     set(LIBTOOLIZE libtoolize)
     set(GRIT_LDFLAGS "")
 endif()
+
+set(LLVM_DISTRIBUTION_COMPONENTS
+    clang-format
+    clang-resource-headers
+    clang
+    dsymutil
+    lld
+    lldb
+    lldb-server
+    lldb-vscode
+    llvm-ar
+    llvm-config
+    llvm-cov
+    llvm-cxxfilt
+    llvm-dwarfdump
+    llvm-nm
+    llvm-lto
+    llvm-lto2
+    llvm-objcopy
+    llvm-objdump
+    llvm-profdata
+    llvm-ranlib
+    llvm-readelf
+    llvm-readobj
+    llvm-size
+    llvm-strip
+    llvm-strings
+    llvm-symbolizer
+    LTO
+    CACHE INTERNAL ""
+)
 
 set(LLVM_TOOLCHAIN_DISTRIBUTION_COMPONENTS
     llvm-toolchain-config-files
@@ -202,7 +241,19 @@ install(
 )
 
 # Groups all the targets that comprise the toolchain.
-add_custom_target(bmt ALL)
+add_custom_target(gba-llvm ALL)
+
+add_dependencies(
+    install-llvm-toolchain
+    gba-llvm
+)
+
+add_custom_target(install-gba-llvm)
+add_dependencies(
+    install-gba-llvm
+    install-llvm-toolchain
+)
+
 
 ExternalProject_Add(
   tools
@@ -297,18 +348,25 @@ ExternalProject_Add_Step(
   DEPENDERS configure
 )
 
+add_dependencies(
+    install-gba-toolchain
+    tools
+    grit
+    gba_sources
+)
+
 install(
   FILES
   ${common}/${config}
   DESTINATION bin
-  COMPONENT llvm-toolchain
+  COMPONENT gba-toolchain
 )
 
 install(
   DIRECTORY
   ${CMAKE_CURRENT_BINARY_DIR}/grit/src/grit-build/
   DESTINATION bin
-  COMPONENT llvm_toolchain
+  COMPONENT gba-toolchain
   FILES_MATCHING PATTERN "grit"
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
 )
@@ -317,7 +375,7 @@ install(
   DIRECTORY
   ${CMAKE_CURRENT_BINARY_DIR}/gba-tools/src/tools-build/
   DESTINATION bin
-  COMPONENT llvm_toolchain
+  COMPONENT gba-toolchain
   FILES_MATCHING PATTERN "*gb*"
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
 )
@@ -326,5 +384,5 @@ install(
   FILES
   ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/aas-src/build/conv2aas/conv2aas
   DESTINATION bin
-  COMPONENT llvm_toolchain
+  COMPONENT gba-toolchain
 )
