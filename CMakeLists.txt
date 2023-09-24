@@ -1,32 +1,51 @@
 # Recent versions of the following tools are pre-requisites:
 # * A toolchain such as gcc & binutils
 # * cmake
-# * meson
+# * make
+# * meson (Not too old. On Linux the apt version has been known to fail, but pip installed version did work. For me 1.2.1 works. )
 # * ninja
 # * python3
-# * make and qemu to run tests
+# * libtoolize or glibtoolize for MacOs
+# * libfreeimage
+# * qemu to run tests
+
+# Before you build:
+#   for MacOs Silicon I needed to explicitly set the include and lib paths of my
+#   package manager. This seems to be a known issue:
+#     https://github.com/Homebrew/brew/issues/13481
+#     export LDFLAGS="-L/opt/homebrew/lib"; export CPPFLAGS="-I/opt/homebrew/include"
+#   Also make sure to set the proper value for the GRIT_LDPATH variable below.
 
 # Commands to build:
 #   mkdir build
 #   cd build
-#   cmake ..
-#   ninja
-#   ninja check
+#   cmake .. -GNinja -DFETCHCONTENT_QUIET=OFF
+#   ninja install
 
-# If the repos are checked out automatically then cmake will fetch the
-# latest changes and check them out every time it runs. To disable this
-# behaviour run:
-#   cmake . -DFETCHCONTENT_FULLY_DISCONNECTED=ON
+# address some MacOs compatibility issues
+# * On MacOs, for libtool, the convention is to rename libtool(ize) to
+#   glibtool(ize), to avoid a name conflict with NeXT libtool.
+# * Homebrew libraries don't seem to propagate
+if(APPLE)
+    set(LIBTOOLIZE glibtoolize)
+    set(GRIT_LDFLAGS LDFLAGS=-L/opt/homebrew/lib)
+else()
+    set(LIBTOOLIZE libtoolize)
+    set(GRIT_LDFLAGS "")
+endif()
 
-# If you prefer you can check out and patch the repos manually and use those:
-#   mkdir repos
-#   git -C repos clone https://github.com/stuij/gba-llvm.git
-#   git -C repos clone https://github.com/devkitPro/gba-tools.git
-#   mkdir build
-#   cd build
-#   cmake .. -GNinja -DFETCHCONTENT_SOURCE_DIR_LLVMPROJECT=../repos/llvm-project -DFETCHCONTENT_SOURCE_DIR_PICOLIBC=../repos/picolibc
-#   ninja
-#   ninja check-llvm-toolchain
+set(LLVM_TOOLCHAIN_DISTRIBUTION_COMPONENTS
+    llvm-toolchain-config-files
+    llvm-toolchain-docs
+    llvm-toolchain-libs
+    llvm-toolchain-samples
+    llvm-toolchain-third-party-licenses
+    gba-toolchain
+    CACHE INTERNAL "Components defined by this CMakeLists that should be
+installed by the install-llvm-toolchain target"
+)
+
+# set(CPACK_COMPONENTS_ALL ${LLVM_TOOLCHAIN_DISTRIBUTION_COMPONENTS} ${LLVM_DISTRIBUTION_COMPONENTS} gba_toolchain CACHE INTERNAL "")
 
 # CONFIGURE_HANDLED_BY_BUILD was introduced in CMake 3.20 and it
 # greatly speeds up incremental builds.
@@ -217,7 +236,8 @@ ExternalProject_Add(
   grit
   DEPENDS llvm-toolchain
   SOURCE_DIR ${grit_SOURCE_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env LDFLAGS=-L/opt/homebrew/lib "CXX=g++ -std=c++14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
+  # On MacOS, the system Clang, which 'g++' is an alias of, defaults to '98
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env ${GRIT_LDFLAGS} "CXX=g++ -std=c++14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
   PREFIX grit
   BUILD_COMMAND make
   INSTALL_COMMAND ""
@@ -226,7 +246,7 @@ ExternalProject_Add(
 ExternalProject_Add_Step(
   grit prepare_configure
   WORKING_DIRECTORY ${grit_SOURCE_DIR}
-  COMMAND glibtoolize
+  COMMAND ${LIBTOOLIZE}
   COMMAND aclocal
   COMMAND autoconf
   COMMAND automake --add-missing
