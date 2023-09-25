@@ -1,5 +1,5 @@
 ifeq ($(strip $(GBA_LLVM)),)
-      $(error Please set GBA_LLVM in your environment. export GBA_LLVM=<path to gba-llvm installation>)
+	GBA_LLVM=../..
 endif
 
 NAME = slides
@@ -7,6 +7,7 @@ NAME = slides
 BIN = $(GBA_LLVM)/bin
 CC = $(BIN)/clang
 GBAFIX = $(BIN)/gbafix
+GRIT = $(BIN)/grit
 LFLAGS = -ltonc
 CFLAGS = -O3 -mthumb --config armv4t-gba.cfg -Wl,-T,gba_cart.ld
 
@@ -32,16 +33,16 @@ $(NAME).elf: $(C_FILES) $(ASM_FILES)
 	$(CC) -o $@ $^ $(CFLAGS) $(LFLAGS)
 
 $(POINTER_LEFT_ASM): $(POINTER_LEFT)
-	grit $^ -gB4 -Mw 8 -Mh 8 -pS -o pointer-left -fa -pT1
+	$(GRIT) $^ -gB4 -Mw 8 -Mh 8 -pS -o pointer-left -fa -pT1
 
 $(POINTER_RIGHT_ASM): $(POINTER_RIGHT)
-	grit $^ -gB4 -Mw 4 -Mh 8 -pS -o pointer-right -fa
+	$(GRIT) $^ -gB4 -Mw 4 -Mh 8 -pS -o pointer-right -fa
 
 $(GBA_CPU_BG_ASM): $(GBA_CPU_BG)
-	grit $^ -mR4 -gB4 -pn16 -o $* -pT8
+	$(GRIT) $^ -mR4 -gB4 -pn16 -o $* -pT8
 
 $(COREMARK_BG_ASM): $(COREMARK_BG)
-	grit $^ -mR4 -gB4 -pn16 -o $*
+	$(GRIT) $^ -mR4 -gB4 -pn16 -o $*
 
 .PHONY: clean
 
