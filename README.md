@@ -51,7 +51,7 @@ Also make sure to set the proper value for the GRIT_LDPATH variable below.
 
 This will create a functional toolchain in the 'build/install' dir:
 
-- An install package with the general form: gba-llvm-1-Darwin-AArch64.tar.xz
+- An install package with the general form: gba-llvm-1-Linux-AArch64.tar.xz
 - An 'install' directory that also contains a functional toolchain to use. But
   it also contains all the install targets of all the CMAKE subtargets that the
   package omits. So this includes a lot more LLVM tools for example, which might

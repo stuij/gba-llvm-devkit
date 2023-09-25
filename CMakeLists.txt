@@ -197,16 +197,6 @@ set(CPACK_STRIP_FILES TRUE)
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY TRUE)
 set(CPACK_PACKAGE_NAME "gba-llvm")
 
-string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} processor_name)
-string(REGEX MATCH "amd64|x64|x86" x86_match ${processor_name})
-if(x86_match)
-    set(processor_name "x86_64")
-else()
-    set(processor_name "AArch64")
-endif()
-
-set(CPACK_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}-${processor_name}")
-
 set(LLVM_ENABLE_PROJECTS clang;lld;lldb CACHE STRING "")
 set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
 # on MacOS we get warnings that LLDB tests won't pass properly
