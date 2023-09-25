@@ -1,45 +1,34 @@
-# Recent versions of the following tools are pre-requisites:
-# * A toolchain such as gcc & binutils
-# * cmake
-# * make
-# * meson (Not too old. On Linux the apt version has been known to fail, but pip installed version did work. For me 1.2.1 works. )
-# * ninja
-# * python3
-# * libtoolize or glibtoolize for MacOs
-# * libfreeimage
-# * qemu to run tests
-
-# Before you build:
-#   for MacOs Silicon I needed to explicitly set the include and lib paths of my
-#   package manager. This seems to be a known issue:
-#     https://github.com/Homebrew/brew/issues/13481
-#     export LDFLAGS="-L/opt/homebrew/lib"; export CPPFLAGS="-I/opt/homebrew/include"
-#   Also make sure to set the proper value for the GRIT_LDPATH variable below.
-
-# Commands to build:
-#   mkdir build
-#   cd build
-#   cmake .. -GNinja -DFETCHCONTENT_QUIET=OFF
-#   ninja
-#   ninja install
+# Copyright (c) 2023, Ties Stuij
+# SPDX-License-Identifier: Apache-2.0
 #
-# This will create a functional toolchain in the 'build/install' dir.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Note that LLVM-wise this installs the kitchen sink.
-# If you want to install a lean release, do:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#   ninja install-llvm-toolchain
-
-# address some MacOs compatibility issues
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# See repo README.md for more information on how to build
+#
+# address some MacOs compatibility issues"
 # * On MacOs, for libtool, the convention is to rename libtool(ize) to
 #   glibtool(ize), to avoid a name conflict with NeXT libtool.
 # * Homebrew libraries don't seem to propagate
+# * MacOs Clang by default compiles with '98. But for grit we need '14
+#   (g++ is an alias for Clang++)
 if(APPLE)
     set(LIBTOOLIZE glibtoolize)
     set(GRIT_LDFLAGS LDFLAGS=-L/opt/homebrew/lib)
+    set(GRIT_COMPILER "CXX=g++ -std=c++14")
 else()
     set(LIBTOOLIZE libtoolize)
     set(GRIT_LDFLAGS "")
+    set(GRIT_COMPILER "")
 endif()
 
 set(LLVM_DISTRIBUTION_COMPONENTS
@@ -74,12 +63,11 @@ set(LLVM_DISTRIBUTION_COMPONENTS
 )
 
 set(LLVM_TOOLCHAIN_DISTRIBUTION_COMPONENTS
-    llvm-toolchain-config-files
-    llvm-toolchain-docs
     llvm-toolchain-libs
-    llvm-toolchain-samples
     llvm-toolchain-third-party-licenses
     gba-toolchain
+    gba-toolchain-third-party-licenses
+    gba-toolchain-examples
     CACHE INTERNAL "Components defined by this CMakeLists that should be
 installed by the install-llvm-toolchain target"
 )
@@ -254,6 +242,17 @@ add_dependencies(
     install-llvm-toolchain
 )
 
+add_custom_target(package-gba-llvm)
+add_dependencies(
+    package-gba-llvm
+    package-llvm-toolchain
+)
+
+add_custom_target(unpack-gba-llvm)
+add_dependencies(
+    unpack-gba-llvm
+    unpack-llvm-toolchain
+)
 
 ExternalProject_Add(
   tools
@@ -288,7 +287,7 @@ ExternalProject_Add(
   DEPENDS llvm-toolchain
   SOURCE_DIR ${grit_SOURCE_DIR}
   # On MacOS, the system Clang, which 'g++' is an alias of, defaults to '98
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env ${GRIT_LDFLAGS} "CXX=g++ -std=c++14" ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env ${GRIT_LDFLAGS} ${GRIT_COMPILER} ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
   PREFIX grit
   BUILD_COMMAND make
   INSTALL_COMMAND ""
@@ -345,14 +344,8 @@ ExternalProject_Add(
 ExternalProject_Add_Step(
   gba_sources install_config
   COMMAND ${CMAKE_COMMAND} -E copy ${common}/${config} ${LLVM_BINARY_DIR}/bin
+  COMMAND ${CMAKE_COMMAND} -E copy ${common}/gba_cart.ld ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/lib
   DEPENDERS configure
-)
-
-add_dependencies(
-    install-gba-toolchain
-    tools
-    grit
-    gba_sources
 )
 
 install(
@@ -360,6 +353,13 @@ install(
   ${common}/${config}
   DESTINATION bin
   COMPONENT gba-toolchain
+)
+
+install(
+   FILES
+   ${common}/gba_cart.ld
+   DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/lib
+   COMPONENT llvm-toolchain
 )
 
 install(
@@ -385,4 +385,41 @@ install(
   ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/aas-src/build/conv2aas/conv2aas
   DESTINATION bin
   COMPONENT gba-toolchain
+)
+
+install(
+    FILES ${CMAKE_SOURCE_DIR}/README.md
+    DESTINATION .
+    COMPONENT gba-toolchain
+)
+
+set(gba_toolchain_third_party_license_files
+    ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/aas-src/LICENSE apex-audio-system.LICENSE
+    ${tools_SOURCE_DIR}/COPYING          gba-tools.COPYING
+    ${grit_SOURCE_DIR}/COPYING           grit.COPYING
+    ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/libtonc-src/license.txt libtonc.license.txt
+    ${common}/MPL-v2.0.txt               gba_crt0.license.txt
+)
+while(gba_toolchain_third_party_license_files)
+    list(POP_FRONT gba_toolchain_third_party_license_files source_file destination_name)
+    install(
+        FILES ${source_file}
+        DESTINATION third-party-licenses
+        COMPONENT gba-toolchain-third-party-licenses
+        RENAME ${destination_name}
+    )
+endwhile()
+
+install(
+    FILES ${common}/GBA-THIRD-PARTY-LICENSES.txt
+    DESTINATION .
+    COMPONENT gba-toolchain-third-party-licenses
+)
+
+set(examples_regex "Makefile|.*\\.(c|cpp|h|ase|png|md)")
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/examples
+    DESTINATION .
+    COMPONENT gba-toolchain-examples
+    FILES_MATCHING REGEX "${examples_files_regex}"
 )
