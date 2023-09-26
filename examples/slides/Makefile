@@ -57,4 +57,4 @@ $(AAS_DATA_ASM):
 .PHONY: clean
 
 clean:
-	rm $(NAME).elf $(NAME).gba pointer*  gba-cpu* coremark*
+	rm $(NAME).elf $(NAME).gba pointer* gba-cpu* coremark* AAS_Data.*
