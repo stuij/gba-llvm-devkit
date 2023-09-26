@@ -168,10 +168,10 @@ FetchContent_MakeAvailable(tools)
 FetchContent_MakeAvailable(grit)
 
 project(
-    gba-llvm
+    gba-llvm-devkit
     VERSION 1
     DESCRIPTION "LLVM-based C/C++ toolchain for Game Boy Advance development"
-    HOMEPAGE_URL "https://github.com/stuij/gba-llvm"
+    HOMEPAGE_URL "https://github.com/stuij/gba-llvm-devkit"
 )
 
 # We generally want to install to a local directory to see what the
@@ -195,7 +195,7 @@ set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 set(CPACK_STRIP_FILES TRUE)
 # When extracting the files put them in an ArmCompiler-.../ directory.
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY TRUE)
-set(CPACK_PACKAGE_NAME "gba-llvm")
+set(CPACK_PACKAGE_NAME "gba-llvm-devkit")
 
 set(LLVM_ENABLE_PROJECTS clang;lld;lldb CACHE STRING "")
 set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
