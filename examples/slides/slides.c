@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <tonc.h>
 
+#include "AAS.h"
+#include "AAS_Data.h"
 #include "text.h"
 #include "bg.h"
 
@@ -97,8 +99,12 @@ int main() {
   // Initialize all sprites
   oam_init(obj_buffer, 128);
 
+  AAS_SetConfig(AAS_CONFIG_MIX_32KHZ, AAS_CONFIG_CHANS_8,
+                AAS_CONFIG_SPATIAL_STEREO, AAS_CONFIG_DYNAMIC_OFF);
+
   irq_init(NULL);
   irq_add(II_VBLANK, NULL);
+  irq_add(II_TIMER1, AAS_Timer1InterruptHandler);
 
   // set up BG0 for a 4bpp 32x32t map,
   // using charblock 2 and screenblock 15
@@ -150,6 +156,8 @@ int main() {
   bool reverse = false;
   bool flapping = false;
 
+  bool paused = 0;
+
   while(1){
     vid_vsync();
     key_poll();
@@ -198,6 +206,13 @@ int main() {
 
       if(key_hit(KEY_B))
         toggle_text();
+
+      if(key_hit(KEY_A)) {
+        if (AAS_MOD_IsPlaying())
+          AAS_MOD_Stop();
+        else
+          AAS_MOD_Play(AAS_DATA_MOD_FlatOutLies);
+      }
     }
 
     animate_wyvern(&frame_offset, &reverse, time, flapping);
