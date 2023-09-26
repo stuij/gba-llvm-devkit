@@ -53,8 +53,8 @@ add_custom_target(libtonc ALL
 add_custom_target(aas ALL
   COMMAND ${CMAKE_COMMAND} -E env GBA_LLVM=${LLVM_BINARY_DIR} make
   COMMAND ${CMAKE_COMMAND} -E copy build/conv2aas/conv2aas ${LLVM_BINARY_DIR}/bin
-  COMMAND ${CMAKE_COMMAND} -E copy_directory build/aas/lib ${LLVM_BINARY_DIR}/lib
-  COMMAND ${CMAKE_COMMAND} -E copy_directory build/aas/include ${LLVM_BINARY_DIR}/include
+  COMMAND ${CMAKE_COMMAND} -E copy_directory build/aas/lib ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/lib
+  COMMAND ${CMAKE_COMMAND} -E copy_directory build/aas/include ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/include
   WORKING_DIRECTORY ${aas_SOURCE_DIR}
   DEPENDS libtonc
 )

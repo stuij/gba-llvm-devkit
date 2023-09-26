@@ -375,12 +375,13 @@ install(
   ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/aas-src/build/conv2aas/conv2aas
   DESTINATION bin
   COMPONENT gba-toolchain
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
 )
 
 install(
-    FILES ${CMAKE_SOURCE_DIR}/README.md
-    DESTINATION .
-    COMPONENT gba-toolchain
+  FILES ${CMAKE_SOURCE_DIR}/README.md
+  DESTINATION .
+  COMPONENT gba-toolchain
 )
 
 set(gba_toolchain_third_party_license_files
