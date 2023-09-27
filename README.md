@@ -22,9 +22,9 @@ todo
 
 TLDR: use the following invocations to create a GBA program:
 
-    \<root>/bin/clang --config armv4t-gba.cfg -Wl,-T,gba_cart.ld program.c -o program.elf
-    \<root>/bin/llvm-objcopy -O binary program.elf program.gba
-    \<root>/bin/gbafix program.gba
+    <root>/bin/clang --config armv4t-gba.cfg -Wl,-T,gba_cart.ld program.c -o program.elf
+    <root>/bin/llvm-objcopy -O binary program.elf program.gba
+    <root>/bin/gbafix program.gba
 
 #### armv4t-gba.cfg
 
@@ -87,7 +87,7 @@ compiler linking in symbols that don't exist, add:
 
 Speaks  somewhat for itself.
 
-The linker file can be found at `lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_cart.ld`. As we've set `--sysroot`, the linker can resolve `gba_cart.ld`.
+The linker file can be found at `<root>/lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_cart.ld`. As we've set `--sysroot`, the linker can resolve `gba_cart.ld`.
 
 In our example above, as we need to pass the linker file from the driver to the linker, the cmdline argument becomes:
 
