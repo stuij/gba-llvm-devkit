@@ -33,13 +33,13 @@ Specifying `--config armv4t-gba.cfg` will include cmdline arguments found in the
 
 Which are:
 
-- --target=armv-none-eabi
-- -mcpu arm7tdmi
-- -fno-exceptions
-- -fno-rtti
-- --sysroot \<CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t
-- \<CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o
-- -D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT
+- `--target=armv-none-eabi`
+- `-mcpu arm7tdmi`
+- `-fno-exceptions`
+- `-fno-rtti`
+- `--sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t`
+- `<CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o`
+- `-D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT`
 
 Breakdown:
 
