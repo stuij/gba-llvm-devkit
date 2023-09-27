@@ -22,13 +22,15 @@
 # * MacOs Clang by default compiles with '98. But for grit we need '14
 #   (g++ is an alias for Clang++)
 if(APPLE)
-    set(LIBTOOLIZE glibtoolize)
-    set(GRIT_LDFLAGS LDFLAGS=-L/opt/homebrew/lib)
-    set(GRIT_COMPILER "CXX=g++ -std=c++14")
+    set(LIBTOOLIZE glibtoolize CACHE STRING "set libtoolize binary")
+    set(GRIT_LDFLAGS LDFLAGS=-L/opt/homebrew/lib CACHE STRING "set LDFLAGS for Grit")
+    set(GRIT_CPPFLAGS CPPFLAGS=-I/opt/homebrew/include CACHE STRING "set CPPFLAGS for Grit")
+    set(GRIT_COMPILER "CXX=clang -std=c++14" CACHE STRING "set compiler for Grit")
 else()
-    set(LIBTOOLIZE libtoolize)
-    set(GRIT_LDFLAGS "")
-    set(GRIT_COMPILER "")
+    set(LIBTOOLIZE libtoolize CACHE STRING "set libtoolize binary")
+    set(GRIT_LDFLAGS "" CACHE STRING "set LDFLAGS for Grit")
+    set(GRIT_CPPFLAGS "" CACHE STRING "set CPPFLAGS for Grit")
+    set(GRIT_COMPILER "" CACHE STRING "set compiler for Grit")
 endif()
 
 set(LLVM_DISTRIBUTION_COMPONENTS
@@ -277,9 +279,9 @@ ExternalProject_Add(
   DEPENDS llvm-toolchain
   SOURCE_DIR ${grit_SOURCE_DIR}
   # On MacOS, the system Clang, which 'g++' is an alias of, defaults to '98
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env ${GRIT_LDFLAGS} ${GRIT_COMPILER} ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env ${GRIT_LDFLAGS} ${GRIT_CPPFLAGS} ${GRIT_COMPILER} ${grit_SOURCE_DIR}/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/grit
   PREFIX grit
-  BUILD_COMMAND make
+  BUILD_COMMAND ${CMAKE_COMMAND} -E env ${GRIT_LDFLAGS} ${GRIT_CPPFLAGS} make
   INSTALL_COMMAND ""
 )
 
