@@ -1,6 +1,6 @@
 # Introduction
 
-<todo>
+todo
 
 # Components
 
@@ -22,9 +22,9 @@
 
 TLDR: use the following invocations to create a GBA program:
 
-    <root>/bin/clang --config armv4t-gba.cfg -Wl,-T,gba_cart.ld program.c -o program.elf
-    <root>/bin/llvm-objcopy -O binary program.elf program.gba
-    <root>/bin/gbafix program.gba
+    \<root>/bin/clang --config armv4t-gba.cfg -Wl,-T,gba_cart.ld program.c -o program.elf
+    \<root>/bin/llvm-objcopy -O binary program.elf program.gba
+    \<root>/bin/gbafix program.gba
 
 #### armv4t-gba.cfg
 
@@ -33,11 +33,12 @@ Specifying `--config armv4t-gba.cfg` will include cmdline arguments found in the
 
 Which are:
 
-- --target=armv-none-eabi -mcpu arm7tdmi
+- --target=armv-none-eabi
+- -mcpu arm7tdmi
 - -fno-exceptions
 - -fno-rtti
-- --sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t
-- <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o
+- --sysroot \<CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t
+- \<CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o
 - -D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT
 
 Breakdown:
@@ -65,11 +66,11 @@ disable those:
 Furthermore the compiler should understand where it can find libraries and
 headers. As Clang can potentially target multiple architectures and multiple
 library variants, we need to supply a `--sysroot` argument. the libraries for
-ARMv4T can be found at `toolchain-root/lib/clang-runtimes/arm-none-eabi/armv4t`:
+ARMv4T can be found at `<root>/lib/clang-runtimes/arm-none-eabi/armv4t`:
 
     --sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t
 
-Where <CFGDIR> is a magic variable with points to the config file directory.
+Where \<CFGDIR> is a magic variable with points to the config file directory.
 
 We also need to include the GBA startup code object file, called `gba_crt0.o`:
 
@@ -97,7 +98,7 @@ uses to put code and data in the right place.
 
 ### Targeting memory regions
 
-<todo>
+todo
 
 ### env variable
 
