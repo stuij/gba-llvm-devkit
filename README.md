@@ -141,7 +141,7 @@ Recent versions of the following tools are pre-requisites:
 - install Xcode from the app store to get Clang
 - then use your favorite package manager (homebrew in the below example) to install the following dependencies:
 
-    brew install python3 git make ninja qemu libfreeimage libtool automake autoconf cmake clang meson
+```  brew install python3 git make ninja qemu libfreeimage libtool automake autoconf cmake clang meson```
 
 #### Windows:
 
