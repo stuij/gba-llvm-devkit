@@ -41,18 +41,30 @@ void write_slides() {
   tte_write(text_slides[text_slide_cur]);
 }
 
+void toggle_text() {
+  REG_BLDCNT ^= 3 << 6;
+  REG_DISPCNT ^= DCNT_BG0;
+}
+
+void text_on() {
+  REG_BLDCNT |= 3 << 6;
+  REG_DISPCNT |= DCNT_BG0;
+}
+
 void update_slides(s32 key_tri) {
   if (key_tri < 0) {
     if (text_slide_cur == 0)
       text_slide_cur = text_slide_len - 1;
     else
       text_slide_cur--;
+    text_on();
     write_slides();
   } else if (key_tri > 0) {
     if (text_slide_cur == text_slide_len - 1)
       text_slide_cur = 0;
     else
       text_slide_cur++;
+    text_on();
     write_slides();
   }
 }

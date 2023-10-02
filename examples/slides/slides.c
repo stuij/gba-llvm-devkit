@@ -49,11 +49,6 @@ void animate_wyvern(u32* frame_offset, bool* reverse, u32 time, bool flapping) {
   }
 }
 
-void toggle_text() {
-  REG_BLDCNT ^= 3 << 6;
-  REG_DISPCNT ^= DCNT_BG0;
-}
-
 void load_sprite_data() {
   // Place the tiles of the 4bpp LLVM wyvern into LOW obj memory (cbb == 4)
   // As the wyvern is too big for just one sprite, we had to split it up
@@ -164,7 +159,20 @@ int main() {
     time += 1;
 
 
-    if(key_held(KEY_L)) {
+    if(key_held(KEY_SELECT)) {
+      if(key_hit(KEY_A))
+        flapping = flapping ? false : true;
+
+      if(key_hit(KEY_B))
+        wyvern_p = !wyvern_p;
+
+      if(key_hit(KEY_R)) {
+        if (AAS_MOD_IsPlaying())
+          AAS_MOD_Stop();
+        else
+          AAS_MOD_Play(AAS_DATA_MOD_FlatOutLies);
+      }
+    } else {
       s32 horz_key = key_tri_horz();
       s32 vert_key = key_tri_vert();
 
@@ -190,29 +198,16 @@ int main() {
       }
       y_view = clamp(y_view, 0, 256 + 1 - SCREEN_HEIGHT);
 
-
       if (horz_key != 0 || vert_key != 0)
         flapping = true;
 
-      if(key_hit(KEY_A))
-        flapping = flapping ? false : true;
 
-      if(key_hit(KEY_B))
-        wyvern_p = !wyvern_p;
-    } else {
       // change slides and background
-      update_slides(bit_tribool(key_hit(-1), KI_RIGHT, KI_LEFT));
-      update_bg(bit_tribool(key_hit(-1), KI_UP, KI_DOWN));
+       update_slides(bit_tribool(key_hit(-1), KI_B, KI_A));
+       update_bg(bit_tribool(key_hit(-1), KI_L, KI_R));
 
-      if(key_hit(KEY_B))
+      if(key_hit(KEY_START))
         toggle_text();
-
-      if(key_hit(KEY_A)) {
-        if (AAS_MOD_IsPlaying())
-          AAS_MOD_Stop();
-        else
-          AAS_MOD_Play(AAS_DATA_MOD_FlatOutLies);
-      }
     }
 
     animate_wyvern(&frame_offset, &reverse, time, flapping);
