@@ -35,19 +35,14 @@ endif()
 
 enable_language(ASM)
 
-add_library(crt0 OBJECT gba_crt0.s)
-
-# It's surprisingly difficult to change the name of an object
-# After much too much research, this was the most elegant solution:
-add_custom_target(copycrt0 ALL
-  DEPENDS crt0
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0> "${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/lib/")
+add_library(crt0-gba STATIC gba_crt0.s)
 
 add_custom_target(libtonc ALL
   COMMAND ${CMAKE_COMMAND} -E env GBA_LLVM=${LLVM_BINARY_DIR} make
   COMMAND ${CMAKE_COMMAND} -E env GBA_LLVM=${LLVM_BINARY_DIR} make install DESTDIR=${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t
   WORKING_DIRECTORY ${libtonc_SOURCE_DIR}
-  DEPENDS copycrt0
+  DEPENDS crt0-gba
 )
 
 add_custom_target(aas ALL

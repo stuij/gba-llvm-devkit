@@ -33,12 +33,12 @@ Specifying `--config armv4t-gba.cfg` will include cmdline arguments found in the
 
 Which are:
 
-- `--target=armv-none-eabi`
-- `-mcpu arm7tdmi`
+- `--target=armv4-none-unknown-eabi`
+- `-mfpu=none`
 - `-fno-exceptions`
 - `-fno-rtti`
 - `--sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t`
-- `<CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o`
+- `-lcrt0-gba`
 - `-D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT`
 
 Breakdown:
@@ -51,11 +51,11 @@ The GBA sports an ARM7TDMI chip, which is from the ARMv4T architecture
 family. We're targeting the Arm Embedded ABI in a bare-metal environment, so the
 target triple becomes:
 
-    --target=arm-none-eabi
+    --target=armv4-none-unknown-eabi
 
-And we target the GBA CPU:
+And we have no fpu:
 
-    -mcpu=arm7tdmi
+    -mfpu=none
 
 We currently don't support C++ exceptions or RTTI, so for C++ programs we should
 disable those:
@@ -63,18 +63,22 @@ disable those:
     -fno-exceptions
     -fno-rtti
 
-Furthermore the compiler should understand where it can find libraries and
-headers. As Clang can potentially target multiple architectures and multiple
-library variants, we need to supply a `--sysroot` argument. the libraries for
-ARMv4T can be found at `<root>/lib/clang-runtimes/arm-none-eabi/armv4t`:
+Furthermore the compiler should understand where it can find the correct
+libraries and headers. As Clang can potentially target multiple architectures
+and multiple library variants, we need to supply a `--sysroot` argument. the
+libraries for ARMv4T can be found at
+`<root>/lib/clang-runtimes/arm-none-eabi/armv4t`:
 
     --sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t
 
-Where \<CFGDIR> is a magic variable with points to the config file directory.
+Where \<CFGDIR> is a magic variable with points to the config file
+directory. This should be handled by Clang's multiboot, but there's currently an
+outstanding bug when targetting Thumb, so for now this works too.
 
-We also need to include the GBA startup code object file, called `gba_crt0.o`:
+We also need to include the GBA startup code library, which is resolved relative
+to `sysroot`.
 
-    <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_crt0.o
+    -lcrt0-gba
 
 Lastly as we're on an embedded platform, and we usually don't have stderr and
 friends available. Recently in verbose aborting has been enabled by default in
@@ -87,9 +91,12 @@ compiler linking in symbols that don't exist, add:
 
 Speaks  somewhat for itself.
 
-The linker file can be found at `<root>/lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_cart.ld`. As we've set `--sysroot`, the linker can resolve `gba_cart.ld`.
+The linker file can be found at
+`<root>/lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_cart.ld`. As we've set
+`--sysroot`, the linker can resolve `gba_cart.ld`.
 
-In our example above, as we need to pass the linker file from the driver to the linker, the cmdline argument becomes:
+In our example above, as we need to pass the linker file from the driver to the
+linker, the cmdline argument becomes:
 
     -Wl,-T,gba_cart.ld
 
