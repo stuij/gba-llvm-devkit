@@ -1,6 +1,27 @@
 # Introduction
 
-todo
+This is a C/C++ Game Boy Advance toolchain based on LLVM.
+
+Currently there are binary packages available for Linux (x86_64, AArch64) and
+macOS silicon. See the
+[https://github.com/stuij/gba-llvm-devkit/releases](release) page to grab the
+latest packages.
+
+The CMakefile.txt file in the source repo will build all the LLVM and GBA tools
+and components from scratch. See the [Building from
+source](#-Building-from-source) section below for instructions.
+
+
+# Why
+
+No good reason but 'seemed like a fun idea at the time'. Mostly to make sure
+that LLVM would not loose the ability to compile for ARMv4T. For example
+compiler-rt and LLD didn't support ARMv4T before this was fixed as part of this
+project.
+
+Also, the more choice the better. It's good to have an alternative to GCC. And the GBA
+is a fun platform to try LLVM concepts on.
+
 
 # Components
 
@@ -25,6 +46,11 @@ TLDR: use the following invocations to create a GBA program:
     <root>/bin/clang --config armv4t-gba.cfg -Wl,-T,gba_cart.ld program.c -o program.elf
     <root>/bin/llvm-objcopy -O binary program.elf program.gba
     <root>/bin/gbafix program.gba
+
+These are essentially the same commands you'd execute when using DevkitArm,
+except that `-specs=gba.specs` is replaced with `--config armv4t-gba.cfg`.
+
+See the below sections for a breakdown of what's involved.
 
 #### armv4t-gba.cfg
 
@@ -105,9 +131,21 @@ uses to put code and data in the right place.
 
 ### Targeting memory regions
 
-todo
+There are three memory regions that code and data could reside in:
+- `iwram` (internal working ram)
+- `ewram` (external working ram)
+- the default is cartidge rom
 
-### env variable
+`iwram` and `ewram` are mapped to linker sections `iwram` and `ewram`, so use
+the appropriate C or asm declarations:
+
+- C: `extern void foobar(void) __attribute__((section("iwram")));`
+- arm: `.section iwram`
+
+Alternately, filenames of the form `*.iwram.c` or `*.ewram.c` will be placed in
+the appropriate section.
+
+### Env variable
 
 After unpacking the archive to the desired location, point the GBA_LLVM
 environmental variable to the root of the installation:
@@ -118,18 +156,36 @@ This variable will be used by the gba-llvm-devkit examples and some compatible
 software packages to configure themselves correctly. Although the examples will
 use the relative path to the toolchain if they can't find GBA_LLVM.
 
+### Known command-line differences between GCC and LLVM
 
-# Source installations
+There are of course a lot of command line differences between GCC and LLVM. But
+if you've used DevkitArm, these are the ones you might have a good chance to run
+into:
 
-### prerequisites
+- LLVM has no support for `-mthumb-interwork`. This is fine because these days,
+  this option does nothing (AAPCS calling convention is the default).
+- LLVM does not support the `long-call` function attribute. Which is also fine,
+  because these days the linker automatically places range extention thunks for
+  long calls.
+- LLVM does not support spec files. It copes by using multilib and config files.
+
+Let us know if you encounter others worth mentioning.
+
+
+# Building from source
+
+### repo
+
+https://github.com/stuij/gba-llvm-devkit
+
+### Prerequisites
 
 Recent versions of the following tools are pre-requisites:
 * A toolchain such as GCC/Clang & binutils
 * git
 * cmake
 * make
-* meson (On Linux the apt version has been known to fail, but pip installed
-  version did wor For me 1.2.1 works.)
+* meson (Use pip for latest version. 1.2.1 works.)
 * ninja
 * python3
 * autoconf
@@ -146,7 +202,9 @@ Recent versions of the following tools are pre-requisites:
 #### macOS:
 
 - install Xcode from the app store to get Clang
-- then use your favorite package manager (homebrew in the below example) to install the following dependencies:
+
+- then use your favorite package manager (homebrew in the below example) to
+  install the following dependencies:
 
 ```  brew install python3 git make ninja qemu libfreeimage libtool automake autoconf cmake clang meson```
 
@@ -187,19 +245,23 @@ are empty.
     mkdir build
     cd build
     cmake .. -GNinja -DFETCHCONTENT_QUIET=OFF
+    ninja
+
     ninja install
+    # or
     ninja package-gba-llvm
 
 This will (should) create a functional toolchain in the 'build' dir:
 
-- An install package with the general form: gba-llvm-devkit-1-Linux-AArch64.tar.xz
-- An `install` directory that also contains a functional toolchain to use. But
-  it also contains all the install targets of all the CMAKE subtargets that the
-  package omits. So this includes a lot more LLVM tools for example, which might
-  be useful for development of the toolchain itself.
+- `ninja package-gba-llvm` will create a package with the general form:
+  gba-llvm-devkit-1-Linux-AArch64.tar.xz
+- `ninja install` will install all the needed files to the `install` directory
+  that will contains all the install targets of all the CMAKE subtargets, some
+  of which `ninja package-gba-llvm omits. So this includes a lot more LLVM tools
+  for example, which might be useful for development of the toolchain itself.
 
 
-### testing the toolchain/examples
+### Testing the toolchain/examples
 
     ninja check-llvm
     ninja check-picolib
@@ -221,7 +283,7 @@ The toolchain doesn't have automated GBA tests yet, but you can run the examples
 in the 'examples' dir. See below.
 
 
-# examples
+# Examples
 
 The distribution package comes with a couple of examples. Two very basic ones to
 just test compiling a GBA program with C and C++.
@@ -236,7 +298,12 @@ path from the example dir to to the root dir of the toolchain.
 Type `make` within an example directory to build.
 
 
-# todo:
+# Issues
+
+For bug reports or any questions, create an issue on the source repo:
+https://github.com/stuij/gba-llvm-devkit/issues
+
+# Todo
 
 - convert/include Maxmod sound library.
 - Include posprintf printf replacement.
@@ -245,5 +312,25 @@ Type `make` within an example directory to build.
 - linker script for multiboot
 - some kind of GBA-specific test suite
 - add tonc examples repo
-- maybe support stdout/stdwarn/stderr as some of the tonc text functionality
-  depends on it
+- support stdout/stdwarn/stderr
+- debug why memcpy seems to be so slow
+- macOS universal libraries
+- LLVM currently does no ARMv4T-specific optimizations. Should be a bunch of
+  low-hanging fruit (for example loop unrolling).
+
+# Resources
+
+If you want to learn how to do Game Boy Advance development, but don't know
+where to start, this page will get you on your way:
+
+https://github.com/gbadev-org/awesome-gbadev
+
+# Changelog
+
+v1:
+
+Initial release. Packages for Linux and macOS. Tested by compiling a relatively
+involved rom.
+
+No immediately known issues exept for that memcpy seems to be really slow. Needs
+an investigation. Workaround: use memcpy16/memcpy32.

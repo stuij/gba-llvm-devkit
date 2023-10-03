@@ -5,7 +5,7 @@ char* text_slides[] = {
     "that are useful to know in advance of introducing\n"
     "the main text.\n"
     "which will be much more expansive than the\n"
-    "introduction, and way more exapnsive than this\n"
+    "introduction, and way more expansive than this\n"
     "introduction to the introduction.\n"
     "Which I would say is more of a preamble.\n"
     "I hope this clears things up. And that would be just"
