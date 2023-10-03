@@ -161,10 +161,13 @@ int main() {
 
     if(key_held(KEY_SELECT)) {
       if(key_hit(KEY_A))
-        flapping = flapping ? false : true;
+        flapping = !flapping;
 
-      if(key_hit(KEY_B))
+      if(key_hit(KEY_B)) {
+        // flip sprite
         wyvern_p = !wyvern_p;
+        flapping = false;
+      }
 
       if(key_hit(KEY_R)) {
         if (AAS_MOD_IsPlaying())
@@ -203,8 +206,8 @@ int main() {
 
 
       // change slides and background
-       update_slides(bit_tribool(key_hit(-1), KI_B, KI_A));
-       update_bg(bit_tribool(key_hit(-1), KI_L, KI_R));
+       update_slides(bit_tribool(key_hit(-1), KI_A, KI_B));
+       update_bg(bit_tribool(key_hit(-1), KI_R, KI_L));
 
       if(key_hit(KEY_START))
         toggle_text();
