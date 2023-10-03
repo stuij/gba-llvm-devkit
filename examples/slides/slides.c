@@ -86,6 +86,29 @@ void init_slides() {
   write_slides();
 }
 
+int main();
+bool ubsan_triggered = false;
+void ubsan_alert() {
+  ubsan_triggered = true;
+  main();
+}
+
+void show_ubsan_triggered() {
+  text_on();
+  tte_write("#{es;P}");
+  tte_write("\n\nOops!\nAlmost wrote past the end of an array!\n\n"
+            "Thanks ubsan sanitizer for catching that!");
+  ubsan_triggered = false;
+}
+
+int get_ubsan_arr(int index) {
+  const int arr[] = {
+      0,
+      1,
+  };
+  return arr[index];
+}
+
 int main() {
   // load things
   load_bg();
@@ -153,6 +176,9 @@ int main() {
 
   bool paused = 0;
 
+  if(ubsan_triggered)
+    show_ubsan_triggered();
+  
   while(1){
     vid_vsync();
     key_poll();
@@ -168,6 +194,9 @@ int main() {
         wyvern_p = !wyvern_p;
         flapping = false;
       }
+      
+      if(key_hit(KEY_L))
+        get_ubsan_arr(2);
 
       if(key_hit(KEY_R)) {
         if (AAS_MOD_IsPlaying())

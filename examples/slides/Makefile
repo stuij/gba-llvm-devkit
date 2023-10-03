@@ -9,7 +9,8 @@ CC = $(BIN)/clang
 GBAFIX = $(BIN)/gbafix
 GRIT = $(BIN)/grit
 LFLAGS = -ltonc -lAAS
-CFLAGS = -O3 -mthumb --config armv4t-gba.cfg -Wl,-T,gba_cart.ld -funroll-loops
+CFLAGS = -O3 -g -mthumb --config armv4t-gba.cfg -Wl,-T,gba_cart.ld -funroll-loops \
+    -fsanitize=array-bounds -fsanitize-trap=array-bounds -ftrap-function=ubsan_alert
 
 POINTER_LEFT = assets/pointer-left.png assets/wyvern-left.png
 POINTER_RIGHT = assets/pointer-right.png assets/wyvern-right.png
@@ -25,7 +26,8 @@ AAS_DATA = AAS_Data
 AAS_DATA_ASM = AAS_Data.s
 
 C_FILES = $(NAME).c
-ASM_FILES = $(POINTER_LEFT_ASM) $(POINTER_RIGHT_ASM) $(GBA_CPU_BG_ASM) $(COREMARK_BG_ASM) $(AAS_DATA_ASM)
+ASM_FILES = $(POINTER_LEFT_ASM) $(POINTER_RIGHT_ASM) $(GBA_CPU_BG_ASM) \
+    $(COREMARK_BG_ASM) $(AAS_DATA_ASM)
 
 CONV2AAS = $(GBA_LLVM)/bin/conv2aas
 ifeq ($(OS),Windows_NT)

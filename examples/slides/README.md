@@ -28,6 +28,7 @@ type:
 - `l` and `r`:    cycle back and forth through background images
 - `select` + `b`: toggle between wyvern and pointer
 - `select` + `a`: tell wyvern to stop flapping
+- `select` + `l`: read past end of array, triggering ubsan sanitizer
 - `select` + `r`: toggle music
 
 # Attribution

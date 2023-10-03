@@ -285,11 +285,13 @@ in the 'examples' dir. See below.
 
 # Examples
 
-The distribution package comes with a couple of examples. Two very basic ones to
-just test compiling a GBA program with C and C++.
+The distribution package comes with a couple of examples.
 
-The `slides` example is a poor-persons integration test of sorts, which uses
-Tonc, Apex Audio System and Grit.
+Two very basic ones to just test compiling a GBA program with C and C++ and
+another basic one, called `ubsan`, triggers an undefined behaviour sanitizer.
+
+A more involved one is the `slides` example, which is a poor-persons
+integration test of sorts, which uses Tonc, Apex Audio System and Grit.
 
 If the GBA_LLVM environmental variable is set, the examples will use this to
 find the root of the toolchain. If not set, the examples will use the relative
