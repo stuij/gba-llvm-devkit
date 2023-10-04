@@ -325,7 +325,7 @@ https://github.com/stuij/gba-llvm-devkit/issues
 If you want to learn how to do Game Boy Advance development, but don't know
 where to start, this page will get you on your way:
 
-https://github.com/gbadev-org/awesome-gbadev
+https://gbadev.net/getting-started.html
 
 # Changelog
 
