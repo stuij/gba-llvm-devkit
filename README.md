@@ -9,7 +9,7 @@ latest packages.
 
 The CMakefile.txt file in the source repo will build all the LLVM and GBA tools
 and components from scratch. See the [Building from
-source](#-building-from-source) section below for instructions.
+source](#building-from-source) section below for instructions.
 
 
 # Why
@@ -172,7 +172,7 @@ into:
 Let us know if you encounter others worth mentioning.
 
 
-# Building from source
+#Building from source
 
 ### repo
 
