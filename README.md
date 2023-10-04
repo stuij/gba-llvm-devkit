@@ -3,13 +3,13 @@
 This is a C/C++ Game Boy Advance toolchain based on LLVM.
 
 Currently there are binary packages available for Linux (x86_64, AArch64) and
-macOS silicon. See the
+macOS (arm64). See the
 [https://github.com/stuij/gba-llvm-devkit/releases](release) page to grab the
 latest packages.
 
 The CMakefile.txt file in the source repo will build all the LLVM and GBA tools
 and components from scratch. See the [Building from
-source](#-Building-from-source) section below for instructions.
+source](#-building-from-source) section below for instructions.
 
 
 # Why
