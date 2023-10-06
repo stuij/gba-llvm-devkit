@@ -21,13 +21,15 @@ GBA_CPU_BG = assets/gba-cpu.png
 GBA_CPU_BG_ASM = gba-cpu.s
 COREMARK_BG = assets/coremark.png
 COREMARK_BG_ASM = coremark.s
+GBA_MEM_MAP_BG = assets/gba-mem-layout.png
+GBA_MEM_MAP_BG_ASM = gba-mem-layout.s
 
 AAS_DATA = AAS_Data
 AAS_DATA_ASM = AAS_Data.s
 
 C_FILES = $(NAME).c
 ASM_FILES = $(POINTER_LEFT_ASM) $(POINTER_RIGHT_ASM) $(GBA_CPU_BG_ASM) \
-    $(COREMARK_BG_ASM) $(AAS_DATA_ASM)
+    $(COREMARK_BG_ASM) $(AAS_DATA_ASM) $(GBA_MEM_MAP_BG_ASM)
 
 CONV2AAS = $(GBA_LLVM)/bin/conv2aas
 ifeq ($(OS),Windows_NT)
@@ -50,6 +52,9 @@ $(POINTER_RIGHT_ASM): $(POINTER_RIGHT)
 $(GBA_CPU_BG_ASM): $(GBA_CPU_BG)
 	$(GRIT) $^ -mR4 -gB4 -pn16 -o $* -pT8
 
+$(GBA_MEM_MAP_BG_ASM): $(GBA_MEM_MAP_BG)
+	$(GRIT) $^ -mR4 -gB4 -pn16 -o $* -pT5
+
 $(COREMARK_BG_ASM): $(COREMARK_BG)
 	$(GRIT) $^ -mR4 -gB4 -pn16 -o $*
 
@@ -59,4 +64,5 @@ $(AAS_DATA_ASM):
 .PHONY: clean
 
 clean:
-	rm $(NAME).elf $(NAME).gba pointer* gba-cpu* coremark* AAS_Data.*
+	rm $(NAME).elf $(NAME).gba pointer* gba-cpu* coremark* \
+      AAS_Data.* gba-mem-layout*

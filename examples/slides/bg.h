@@ -1,6 +1,7 @@
 // backgrounds
 #include "coremark.h"
 #include "gba-cpu.h"
+#include "gba-mem-layout.h"
 
 struct Background {
   const unsigned int* tiles;
@@ -17,6 +18,7 @@ struct Background {
 
 struct Background bg[] = {
   BG_LIST(gba_cpu),
+  BG_LIST(gba_mem_layout),
   BG_LIST(coremark),
 };
 
