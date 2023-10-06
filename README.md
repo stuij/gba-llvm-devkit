@@ -171,6 +171,9 @@ into:
 
 Let us know if you encounter others worth mentioning.
 
+### Debugging
+
+See the [debugging document](docs/Debugging.md).
 
 # Building from source
 
