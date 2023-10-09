@@ -2,6 +2,7 @@
 #include "coremark.h"
 #include "gba-cpu.h"
 #include "gba-mem-layout.h"
+#include "qr-code.h"
 
 struct Background {
   const unsigned int* tiles;
@@ -20,6 +21,7 @@ struct Background bg[] = {
   BG_LIST(gba_cpu),
   BG_LIST(gba_mem_layout),
   BG_LIST(coremark),
+  BG_LIST(qr_code),
 };
 
 u32 bg_cur = 0;
