@@ -137,7 +137,7 @@ int main() {
       0,          // Bottom layers (NONE)
       0);         // mode (OFF)
 
-  REG_BLDY= 0xa;
+  REG_BLDY= 0xd;
 
   // Set object structs with relevant settings/data
   // first calculate initial tile id offsets
@@ -204,6 +204,10 @@ int main() {
         else
           AAS_MOD_Play(AAS_DATA_MOD_FlatOutLies);
       }
+
+      if(key_hit(KEY_START)) {
+        x_view = 0; y_view = 0;
+      }
     } else {
       s32 horz_key = key_tri_horz();
       s32 vert_key = key_tri_vert();
@@ -236,7 +240,7 @@ int main() {
 
       // change slides and background
        update_slides(bit_tribool(key_hit(-1), KI_A, KI_B));
-       update_bg(bit_tribool(key_hit(-1), KI_R, KI_L));
+       update_bg(bit_tribool(key_hit(-1), KI_R, KI_L), &x_view, &y_view);
 
       if(key_hit(KEY_START))
         toggle_text();

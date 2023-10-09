@@ -22,14 +22,15 @@ type:
 
 # How to use
 
-- `d-pad`:        move the cursor
-- `start`:        toggle slide layer on and off
-- `b` and `a`:    cycle back and forth through slides
-- `l` and `r`:    cycle back and forth through background images
-- `select` + `b`: toggle between wyvern and pointer
-- `select` + `a`: tell wyvern to stop flapping
-- `select` + `l`: read past end of array, triggering ubsan sanitizer
-- `select` + `r`: toggle music
+- `d-pad`:            move the cursor
+- `start`:            toggle slide layer on and off
+- `b` and `a`:        cycle back and forth through slides
+- `l` and `r`:        cycle back and forth through background images
+- `select` + `b`:     toggle between wyvern and pointer
+- `select` + `a`:     tell wyvern to stop flapping
+- `select` + `l`:     read past end of array, triggering ubsan sanitizer
+- `select` + `r`:     toggle music
+- `select` + `start`: set background back to coordinates 0,0
 
 # Attribution
 

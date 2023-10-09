@@ -36,19 +36,21 @@ void load_bg() {
     memcpy16(&se_mem[14][0], bg[bg_cur].map, bg[bg_cur].map_len / 2);
 }
 
-void update_bg(s32 key_tri) {
+void update_bg(s32 key_tri, s32* x_view, s32* y_view) {
   if (key_tri < 0) {
     if (bg_cur == 0)
       bg_cur = bg_len - 1;
     else
       bg_cur--;
     load_bg();
+    *x_view = 0; *y_view = 0;
   } else if (key_tri > 0) {
     if (bg_cur == bg_len - 1)
       bg_cur = 0;
     else
       bg_cur++;
     load_bg();
+    *x_view = 0; *y_view = 0;
   }
 }
 
