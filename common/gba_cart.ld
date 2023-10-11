@@ -102,6 +102,7 @@ SECTIONS
 	.text  :   /* ALIGN (4): */
 	{
 		*(EXCLUDE_FILE (*.iwram*) .text*)
+		*(EXCLUDE_FILE (*.ewram*) .text*)
 		*(.gnu.linkonce.t.*)
 		KEEP (*(.text.*personality*))
 		/* .gnu.warning sections are handled specially by elf32.em.  */
@@ -255,6 +256,7 @@ SECTIONS
 	.ewram __ewram_start : AT (__ewram_lma)
 	{
 		*(.ewram*)
+		*ewram.*(.text* .data*)
 		. = ALIGN(4);  /* REQUIRED. LD is flaky without it. */
 		__ewram_end = ABSOLUTE(.);
         __end__ = ABSOLUTE(.);
