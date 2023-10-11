@@ -19,8 +19,10 @@ POINTER_RIGHT_ASM = pointer-right.s
 
 GBA_CPU_BG = assets/gba-cpu.png
 GBA_CPU_BG_ASM = gba-cpu.s
-COREMARK_BG = assets/coremark.png
-COREMARK_BG_ASM = coremark.s
+COREMARK_GCC_BG = assets/coremark-gcc.png
+COREMARK_GCC_BG_ASM = coremark-gcc.s
+COREMARK_CLANG_BG = assets/coremark-clang.png
+COREMARK_CLANG_BG_ASM = coremark-clang.s
 GBA_MEM_MAP_BG = assets/gba-mem-layout.png
 GBA_MEM_MAP_BG_ASM = gba-mem-layout.s
 QR_CODE_BG = assets/qr-code.png
@@ -31,7 +33,8 @@ AAS_DATA_ASM = AAS_Data.s
 
 C_FILES = $(NAME).c
 ASM_FILES = $(POINTER_LEFT_ASM) $(POINTER_RIGHT_ASM) $(GBA_CPU_BG_ASM) \
-    $(COREMARK_BG_ASM) $(AAS_DATA_ASM) $(GBA_MEM_MAP_BG_ASM) $(QR_CODE_BG_ASM)
+    $(COREMARK_GCC_BG_ASM) $(COREMARK_CLANG_BG_ASM) $(AAS_DATA_ASM) \
+    $(GBA_MEM_MAP_BG_ASM) $(QR_CODE_BG_ASM)
 
 CONV2AAS = $(GBA_LLVM)/bin/conv2aas
 ifeq ($(OS),Windows_NT)
@@ -57,7 +60,10 @@ $(GBA_CPU_BG_ASM): $(GBA_CPU_BG)
 $(GBA_MEM_MAP_BG_ASM): $(GBA_MEM_MAP_BG)
 	$(GRIT) $^ -mR4 -gB4 -pn16 -o $* -pT5
 
-$(COREMARK_BG_ASM): $(COREMARK_BG)
+$(COREMARK_GCC_BG_ASM): $(COREMARK_GCC_BG)
+	$(GRIT) $^ -mR4 -gB4 -pn16 -o $*
+
+$(COREMARK_CLANG_BG_ASM): $(COREMARK_CLANG_BG)
 	$(GRIT) $^ -mR4 -gB4 -pn16 -o $*
 
 $(QR_CODE_BG_ASM): $(QR_CODE_BG)

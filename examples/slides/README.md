@@ -30,7 +30,7 @@ type:
 - `select` + `a`:     tell wyvern to stop flapping
 - `select` + `l`:     read past end of array, triggering ubsan sanitizer
 - `select` + `r`:     toggle music
-- `select` + `start`: set background back to coordinates 0,0
+- `select` + `start`: reset background window to coordinates 0,0
 
 # Attribution
 

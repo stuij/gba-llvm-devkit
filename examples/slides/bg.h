@@ -1,5 +1,6 @@
 // backgrounds
-#include "coremark.h"
+#include "coremark-gcc.h"
+#include "coremark-clang.h"
 #include "gba-cpu.h"
 #include "gba-mem-layout.h"
 #include "qr-code.h"
@@ -20,7 +21,8 @@ struct Background {
 struct Background bg[] = {
   BG_LIST(gba_cpu),
   BG_LIST(gba_mem_layout),
-  BG_LIST(coremark),
+  BG_LIST(coremark_gcc),
+  BG_LIST(coremark_clang),
   BG_LIST(qr_code),
 };
 
