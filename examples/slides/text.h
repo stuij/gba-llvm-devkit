@@ -1,16 +1,4 @@
 char* text_slides[] = {
-    "  Intro\n\n"
-
-    "- Fairly obsessed with Game Boy Advance\n"
-    "- Made my first substantial program on it\n"
-    "- Taught me assembly, made a toy compiler\n"
-    "- Got my first two programming jobs out of it\n"
-    "- All good things came from the GBA\n"
-    "- Got to work at Arm in LLVM Embedded team\n"
-    "- Wanted LLVM-based toolchain\n"
-    "- Not obvious how things fit together\n",
-
-
     "  Talk about\n\n"
 
     "- Embedded compiler how\n"
@@ -30,6 +18,18 @@ char* text_slides[] = {
 
     "- Some of talk on BMT, some on GBA toolchain\n"
     "- Meant to be general tutorial, not BMT specific",
+
+
+    "  Intro\n\n"
+
+    "- Fairly obsessed with Game Boy Advance\n"
+    "- Made my first substantial program on it\n"
+    "- Taught me assembly, made a toy compiler\n"
+    "- Got my first two programming jobs out of it\n"
+    "- All good things came from the GBA\n"
+    "- Got to work at Arm in LLVM Embedded team\n"
+    "- Wanted LLVM-based toolchain\n"
+    "- Not obvious how things fit together\n",
 
 
     "  Talk overview\n\n"
@@ -287,7 +287,7 @@ char* text_slides[] = {
     "  * yaml files containing rules\n"
     "    + variant\n"
     "    + matchers\n"
-    "- Sets –sysroot, –isystem, -L\n"
+    "- Sets -sysroot, -isystem, -L\n"
     "- Can compose multiple matches\n"
     "- Currently not working for GBA\n"
     "  * Tiny bug when building for thumb\n"
@@ -334,7 +334,6 @@ char* text_slides[] = {
     "  * Respect code regions\n"
     "  * Still bunch of issues\n"
     "  * Code size can worsen\n"
-    "  * Goal is to implement API\n"
     "- Distribute code over memory locations\n"
     "- Compression\n"
     "- Debuggability\n"
@@ -361,7 +360,7 @@ char* text_slides[] = {
     "- Newlib(-nano), picolibc, LLVM Libc, etc..\n"
     "- Went with picolibc\n"
     "  * BSD license\n"
-    "  * Newlib doesn’t have LLVM config\n"
+    "  * Newlib doesn't have LLVM config\n"
     "  * Responsive maintainers\n"
     "  * More suitable for embedded development\n"
     "- LLVM Libc \n"
@@ -414,6 +413,19 @@ char* text_slides[] = {
     "- loop unrolling: from 26K to 140K\n"
     "- jump threading, inline|unroll-threshold\n"
     "  * less size bloat (~ 1K each)",
+
+
+    "  Resources\n\n"
+
+    "- Discord: LLVM -> #embedded-toolchains\n"
+    "- Discourse:\n"
+    "  * LLVM Embedded Toolchains Working group\n"
+    "\n"
+    "sites:\n"
+    "- http://gbadev.net/getting-started.html\n"
+    "- https://github.com/ARM-software/\n"
+    "    LLVM-embedded-toolchain-for-Arm\n"
+    "- https://clang.llvm.org/docs/Multilib.html",
 
 
     "  The end\n\n"
