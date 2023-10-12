@@ -4,21 +4,18 @@ char* text_slides[] = {
     "- Fairly obsessed with Game Boy Advance\n"
     "- Made my first substantial program on it\n"
     "- Taught me assembly, made a toy compiler\n"
-    "- Got my first two jobs out of it\n"
+    "- Got my first two programming jobs out of it\n"
     "- All good things came from the GBA\n"
     "- Got to work at Arm in LLVM Embedded team\n"
     "- Wanted LLVM-based toolchain\n"
-    "- Has been tricky to find info\n"
-    "- If your slides doesn't fit on a GBA screen..",
+    "- Not obvious how things fit together\n",
 
 
     "  Talk about\n\n"
 
     "- Embedded compiler how\n"
-    "- State of the art\n"
-    "- Current LLVM embedded hot topics\n"
     "- GCC toolchain compatibility issues\n"
-    "- What parts of LLVM were/are in need of fixup?",
+    "- Current LLVM embedded hot topics",
 
 
     "  Vehicle\n\n"
@@ -28,20 +25,22 @@ char* text_slides[] = {
     "  - LLVM Embedded Toolchain for Arm (BMT)\n"
     "  - Completely open source\n"
     "  - https://github.com/stuij/gba-llvm-devkit\n"
-    "  - 1st release\n\n"
+    "  - 1st release\n"
+    "  - Includes these slides (examples/slides)\n\n"
 
-    "some of talk on BMT, some on GBA toolchain",
+    "- Some of talk on BMT, some on GBA toolchain\n"
+    "- Meant to be general tutorial, not BMT specific",
 
 
     "  Talk overview\n\n"
 
     "- Short history of embedded LLVM\n"
     "- Game Boy Advance (re)introduction\n"
+    "- Example program\n"
     "- Embedded toolchain component overview\n"
     "- Build setup\n"
     "- Components: Compiler, LLD, etc..\n"
-    "- Example program\n"
-    "- Evaluation",
+    "- Optimization!",
 
 
     "\n\n"
@@ -66,7 +65,7 @@ char* text_slides[] = {
     "- LLVM Embedded Toolchains Working group\n",
 
 
-    "  Game Boy Advance overview\n\n"
+    "  Game Boy Advance/ARM7TDMI overview\n\n"
 
     "- Nintendo handheld, successor of Game Boy\n"
     "- Released in March 2001, 82M units sold\n"
@@ -79,7 +78,7 @@ char* text_slides[] = {
     "- 10 billion chips in total, 200M in 2020\n",
 
 
-    "  Game Boy internals\n\n"
+    "  Game Boy Advance internals\n\n"
 
     "- Picture Processing Unit (PPU)\n"
     "  * bitmap modes, tile modes\n"
@@ -89,8 +88,50 @@ char* text_slides[] = {
     "  * Orig Game Boy PSG\n"
     "    + Manipulate 4 waveforms, 4 channels\n"
     "  * 2 channels to convert PGM format to DAC\n"
-    "- Link port with varous comm. modes\n"
-    "- Bunch of memory we’ll talk about later\n",
+    "- Memory mapped IO all the way\n"
+    "- Bunch of memory we will talk about later\n",
+
+
+    "  Example\n\n"
+
+    "Let's paint the screen red:\n"
+    "\n"
+    "int main() {\n"
+    "  draw_screen();\n"
+    "  while(1) {};\n"
+    "  return 1;\n"
+    "}",
+
+
+    "\n"
+    "void draw_screen() {\n"
+    "  // set bg mode 3 (bitmap) and turn on bg 2\n"
+    "  // 0x4000000 == REG_DISPCNT\n"
+    "  *(unsigned long*) 0x4000000 = 0x403;\n"
+    "\n"
+    "  u16* vram = (u16*) 0x6000000;\n"
+    "  // write red to all pixels on 240x160 screen\n"
+    "  for(int x = 0; x < 240; x++)\n"
+    "    for(int y = 0; y < 160; y++)\n"
+    "      vram[x + y * 240] = 31;\n"
+    "}",
+
+
+    "  Toolchain",
+
+
+    "  Components\n\n"
+
+    "LLVM compiler suite tools\n"
+    "compiler-rt builtins: target-specific code\n"
+    "LLVM libcxx: libc++\n"
+    "picolibc: embedded C library\n"
+    "gba_cart.ld: linker script\n"
+    "gba_crt0.s: startup code for the GBA\n"
+    "libtonc: GBA low-level library\n"
+    "Apex Audio System: GBA music library\n"
+    "Grit: GBA graphics swiss army knife\n"
+    "gbafix: fix up GBA headers",
 
 
     "  Invocation\n\n"
@@ -105,12 +146,14 @@ char* text_slides[] = {
 
     "  gba.cfg\n\n"
 
-    "--target=arm-none-eabi -mcpu=arm7tdmi\n"
+    "--target=armv4t-none-eabi -mfpu=none\n"
     "-fno-exceptions\n"
     "-fno-rtti\n"
-    "--sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t\n"
+    "--sysroot <CFGDIR>/../lib/clang-runtimes/\n"
+    "    arm-none-eabi/armv4t\n"
     "-lcrt0-gba\n"
-    "-D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT\n",
+    "-D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE\n"
+    "    _ABORT\n",
 
 
     "  Toolchain layout\n\n"
@@ -121,35 +164,39 @@ char* text_slides[] = {
     "  multilib.yaml\n"
     "  arm-none-eabi/armv4t/\n"
     "    lib/\n"
-    "      crt0.o, Gba_cart.ld, libraries\n"
+    "      libcrt0-gba.a, gba_cart.ld, libraries\n"
     "    include/\n"
     "      headers",
 
 
-    "  Dependency graph\n\n"
-
-    "- GBA tools + config files\n"
-    "- compiler tools\n"
-    "  * c Library (headers)\n"
-    "    + compiler-rt builtins\n"
-    "      # libunwind (headers)\n"
-    "        - C++abi\n"
-    "      # libcxx\n"
-    "        - libcxxabi (also libunwind)\n"
-    "          * GBA libraries",
+    "  Dependency graph",
 
 
     "  Build setup\n\n"
 
-    "- Built from scratch, no GCC\n"
     "- GBA toolchain built on top of BMT\n"
-    "- Uses CMake. Very composable, feels icky\n"
+    "- Uses CMake. Very composable, feels bit icky\n"
+    "  * Download dependency sources\n"
+    "  * ExternalProject_Add -> target\n"
+    "    # Feed them CMAKE_ARGS\n"
+    "  * External project for GBA libraries\n"
+    "- Loop through library variants\n"
     "- Piggyback on everything: CPACK, testing, infra\n"
     "- Theme: target/host lib and includes mixing\n"
-    "- Create subproject. Some kind of hygiene\n"
-    "- -DCMAKE_SYSTEM_NAME=Generic\n"
-    "- New toolchain, use BMT as example\n"
-    "- Loop through library variants\n",
+    "- Use BMT as example",
+
+
+    "  CMake argument themes\n\n"
+
+    "- Set target\n"
+    "- Specify building for embedded\n"
+    "  * -DLIBCXX_ENABLE_STATIC=ON\n"
+    "  * CMAKE_SYSTEM_NAME=Generic\n"
+    "  * -D*_BAREMETAL*=ON\n"
+    "- Feature options\n"
+    "- Where are tools, config files\n"
+    "- Where is target sysroot\n"
+    "- test/build configuration",
 
 
     "  CMake example: compiler-rt\n\n"
@@ -180,12 +227,11 @@ char* text_slides[] = {
 
     "  CMake: runtimes\n\n"
 
-    "-DLIBCXX_ENABLE_MONOTONIC_CLOCK=OFF\n"
-    "-DLIBCXX_ENABLE_THREADS=OFF\n"
+    "-DLIBCXXABI_USE_COMPILER_RT=ON\n"
+    "-DLIBCXXABI_USE_LLVM_UNWINDER=ON\n"
     "-DLIBCXX_ENABLE_RANDOM_DEVICE=OFF\n"
     "-DLIBCXX_ENABLE_RTTI=OFF\n"
     "-DLIBCXX_ENABLE_WIDE_CHARACTERS=OFF\n"
-    "-DLIBUNWIND_ENABLE_THREADS=OFF\n"
     "-DCMAKE_SYSTEM_NAME=Generic\n"
     "-DCMAKE_TRY_COMPILE_TARGET_TYPE=\n"
     "    STATIC_LIBRARY\n"
@@ -195,15 +241,12 @@ char* text_slides[] = {
     "  CMake: runtimes cont..\n\n"
 
     "-DLIBCXXABI_BAREMETAL=ON\n"
-    "-DLIBCXXABI_ENABLE_SHARED=OFF\n"
-    "-DLIBCXXABI_ENABLE_ASSERTIONS=OFF\n"
     "-DLIBCXXABI_ENABLE_STATIC=ON\n"
+    "-DLIBCXXABI_ENABLE_ASSERTIONS=OFF\n"
     "-DLIBCXXABI_LIBCXX_INCLUDES=\n"
     "    '${INSTALL_DIR}/include/c++/v1'\n"
-    "-DLIBCXXABI_USE_COMPILER_RT=ON\n"
-    "-DLIBCXXABI_USE_LLVM_UNWINDER=ON\n"
-    "\n"
-    "Hafiz Abid Qadeer talk for more",
+    "-DCOMPILER_RT_INCLUDE_TESTS=ON\n"
+    "-DCMAKE_INSTALL_PREFIX=<DIR>",
 
 
     "Individual components\n\n"
@@ -219,7 +262,7 @@ char* text_slides[] = {
     "- Arm: Clang defaults to ARMv4T/ARM7TDMI\n"
     "- Bare metal file:\n"
     "  clang/lib/Driver/ToolChains/BareMetal.cpp\n"
-    "- handles things like –nostdsysteminc, multilib\n"
+    "- handles things like -nostdinc, multilib\n"
     "- Compiling old GBA programs:\n"
     "  * Not too happy with pre-UAL syntax\n"
     "    + Thumb: mov -> movs\n"
@@ -251,6 +294,14 @@ char* text_slides[] = {
     "  * Can be fixed with matcher rule.\n",
 
 
+    "  Linking\n\n",
+
+    "- GBA memory region overview\n"
+    "- Linker script overview\n"
+    "- Linker issues\n"
+    "- Linker what's hot",
+
+
     "  Linker script/startup code what\n\n"
 
     "- Linker script\n"
@@ -271,7 +322,7 @@ char* text_slides[] = {
     "     - no MOVW/MOVT\n"
     "- For GBA:\n"
     "  * Using DevkitPro linker script \n"
-    "  * LLD didn’t accept overlay syntax\n"
+    "  * LLD didn't accept overlay syntax\n"
     "  * C++ data section names\n"
     "  * clib incompatibilities\n"
     "  * Add picolibc stubs",
@@ -283,7 +334,7 @@ char* text_slides[] = {
     "  * Respect code regions\n"
     "  * Still bunch of issues\n"
     "  * Code size can worsen\n"
-    "  * goal is to implement API\n"
+    "  * Goal is to implement API\n"
     "- Distribute code over memory locations\n"
     "- Compression\n"
     "- Debuggability\n"
@@ -299,9 +350,9 @@ char* text_slides[] = {
     "- Also sanitizers, profiling, fuzzing, xray,\n"
     "    scudo, BlocksRuntime, etc..\n"
     "- Currently only builtins\n"
-    "- You get ubsan for free. It’s cheap.\n"
     "- For ARMv4(T) there was no builtins target\n"
     "  * Easy to fix\n"
+    "- You get ubsan for free. It's cheap.\n"
     "- Demo time",
 
 
@@ -315,19 +366,20 @@ char* text_slides[] = {
     "  * More suitable for embedded development\n"
     "- LLVM Libc \n"
     "  * Looks promising, but needs work\n"
-    "  * Has seen embedded build success\n"
-    "  * Talks underway on scalability",
+    "  * Talks underway on scalability\n"
+    "- GBA: implement stdout and friends",
 
 
     " libcxx\n\n"
 
     "- LLVM libcxx\n"
-    "  * More efficient for embedded\n"
+    "  * Make more efficient for embedded\n"
     "- On GBA\n"
     "  * Butano, a popular GBA C++ engine, uses ETL\n"
     "      (Embedded Template Library)\n"
-    "  * Optimized for embedded applications\n"
-    "- Distributed as source?",
+    "    + Optimized for embedded applications\n"
+    "- Distributed as source?\n"
+    "- carving of functionality",
 
 
     "  LLDB\n\n"
@@ -344,41 +396,24 @@ char* text_slides[] = {
     "- gbafix\n"
     "- GBFS\n"
     "- Maxmod\n"
-    "- posprintf"
+    "- posprintf\n"
     "- Apex Audio System\n"
     "- Aseprite\n"
     "- Propulse Tracker",
 
 
-    "  Example\n\n"
+    "  Performance / Coremark\n\n"
 
-    "Let’s paint the screen red:\n"
-    "\n"
-    "int main() {\n"
-    "  draw_screen();\n"
-    "  while(1) {};\n"
-    "  return 1;\n"
-    "}",
-
-
-    "  Example cont..\n\n"
-
-    "void draw_screen() {\n"
-    "  // set bg mode 3 (bitmap) and turn on bg 2\n"
-    "  *(unsigned long*) 0x4000000 = 0x403;\n"
-    "\n"
-    "  u16* vram = (u16*) 0x6000000;\n"
-    "  // write red to all pixels on 240x160 screen\n"
-    "  for(int x = 0; x < 240; x++)\n"
-    "    for(int y = 0; y < 160; y++)\n"
-    "      vram[x + y * 240] = 31;\n"
-    "}",
-
-
-    "  Evaluation\n\n"
-
-    "- Coremark scores\n"
-    "- Improvements",
+    "- Industry standard embedded benchmark\n"
+    "- (iterations/sec) / Mhz, single-core\n"
+    "- examples:\n"
+    "  * Cortex-M0 minimal gate-count: 2.33\n"
+    "  * Cortex-M85 high end embedded: 6.28\n"
+    "  * NXP LS2088A (Cortex-A72): 36.10\n"
+    "- Small binary size (sub 30K), fits in IWRAM\n"
+    "- loop unrolling: from 26K to 140K\n"
+    "- jump threading, inline|unroll-threshold\n"
+    "  * less size bloat (~ 1K each)",
 
 
     "  The end\n\n"

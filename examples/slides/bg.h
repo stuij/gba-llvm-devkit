@@ -1,9 +1,14 @@
 // backgrounds
-#include "coremark-gcc.h"
 #include "coremark-clang.h"
+#include "coremark-comp.h"
+#include "coremark-gcc.h"
+#include "dep-graph.h"
+#include "dep-graph-runtimes.h"
 #include "gba-cpu.h"
 #include "gba-mem-layout.h"
+#include "nokias.h"
 #include "qr-code.h"
+#include "timeline.h"
 
 struct Background {
   const unsigned int* tiles;
@@ -20,9 +25,14 @@ struct Background {
 
 struct Background bg[] = {
   BG_LIST(gba_cpu),
+  BG_LIST(timeline),
+  BG_LIST(nokias),
+  BG_LIST(dep_graph),
+  BG_LIST(dep_graph_runtimes),
   BG_LIST(gba_mem_layout),
   BG_LIST(coremark_gcc),
   BG_LIST(coremark_clang),
+  BG_LIST(coremark_comp),
   BG_LIST(qr_code),
 };
 

@@ -96,8 +96,20 @@ void ubsan_alert() {
 void show_ubsan_triggered() {
   text_on();
   tte_write("#{es;P}");
-  tte_write("\n\nOops!\nAlmost wrote past the end of an array!\n\n"
-            "Thanks ubsan sanitizer for catching that!");
+  tte_write("Oops!\nAlmost wrote past the end of an array!\n"
+            "Thanks ubsan sanitizer for catching that!\n"
+            "\n"
+            "\n"
+            "int get_ubsan_arr(int index) {\n"
+            "  const int arr[] = {0, 1};\n"
+            "  return arr[index];\n"
+            "}\n"
+            "  ...\n"
+            " get_ubsan_arr(2);\n"
+            " ..."
+            );
+
+
   ubsan_triggered = false;
 }
 
