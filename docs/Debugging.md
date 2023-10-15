@@ -12,7 +12,9 @@ choose a lower optimisation level such as `-O0`.
 ## Running mGBA for Debugging
 
 Note: mGBA has had various fixes for debugger compatibilty over time. If you
-have problems, try to use the newest mGBA you can get, or build it from source.
+have problems, use the [latest successful Github
+build](https://mgba.io/downloads.html#development-downloads) from buildbot
+(`About mGBA` shows the commit hash), or build it from source.
 
 For all the following steps you will be running mGBA either manually or in the
 background automatically. This is how you generally do that:
