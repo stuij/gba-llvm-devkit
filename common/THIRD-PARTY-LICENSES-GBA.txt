@@ -3,6 +3,7 @@ embeds and uses the following Game Boy Advance specific pieces of software which
 have additional or alternate licenses:
 
  - Apex Audio System: apex-audio-system.LICENSE
+ - ETL: etl.LICENSE
  - gba-tools: gba-tools.COPYING
  - Grit: grit.COPYING
  - libtonc: libtonc.license.txt

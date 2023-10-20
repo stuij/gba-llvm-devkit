@@ -392,6 +392,7 @@ set(gba_toolchain_third_party_license_files
     ${grit_SOURCE_DIR}/COPYING           grit.COPYING
     ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/libtonc-src/license.txt libtonc.license.txt
     ${common}/MPL-v2.0.txt               gba_crt0.license.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/gba_sources/src/gba_sources-build/_deps/etl-src/LICENSE etl.LICENSE
 )
 while(gba_toolchain_third_party_license_files)
     list(POP_FRONT gba_toolchain_third_party_license_files source_file destination_name)
@@ -404,7 +405,7 @@ while(gba_toolchain_third_party_license_files)
 endwhile()
 
 install(
-    FILES ${common}/GBA-THIRD-PARTY-LICENSES.txt
+    FILES ${common}/THIRD-PARTY-LICENSES-GBA.txt
     DESTINATION .
     COMPONENT gba-toolchain-third-party-licenses
 )

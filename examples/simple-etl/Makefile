@@ -1,0 +1,24 @@
+ifeq ($(strip $(GBA_LLVM)),)
+	GBA_LLVM = ../..
+endif
+
+NAME = test
+
+BIN = $(GBA_LLVM)/bin
+CC = $(BIN)/clang++
+GBAFIX = $(BIN)/gbafix
+CFLAGS = -O3 -mthumb -nostdlib --config armv4t-gba.cfg -Wl,-T,gba_cart.ld \
+   -DETL_NO_STL -ltonc -fno-unwind-tables -fno-threadsafe-statics
+C_FILES = $(NAME).cpp
+
+$(NAME).gba: $(NAME).elf
+	$(BIN)/llvm-objcopy -O binary $^ $@
+	$(GBAFIX) $@
+
+$(NAME).elf: $(C_FILES)
+	$(CC) -o $@ $^ $(CFLAGS) $(LFLAGS)
+
+.PHONY: clean
+
+clean:
+	rm $(NAME).elf $(NAME).gba

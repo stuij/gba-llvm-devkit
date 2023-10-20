@@ -28,6 +28,8 @@ is a fun platform to try LLVM concepts on.
 - LLVM compiler suite tools: clang/clang++, lld, lldb, etc..
 - compiler-rt: LLVM builtins runtime support
 - LLVM libcxx: C++ library
+- ETL: embedded alternative to common C++ STL constructs, can be used in
+  conjunction with libcxx
 - picolibc: embedded C library
 - gba_cart.ld: linker script for GBA cart executables (as opposed to multiboot)
 - gba_crt0.s: startup code for the GBA

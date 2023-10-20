@@ -23,8 +23,18 @@ FetchContent_Declare(aas
     SOURCE_SUBDIR do_not_add_aas_subdir_yet
 )
 
+FetchContent_Declare(etl
+    GIT_REPOSITORY https://github.com/ETLCPP/etl
+    GIT_TAG "${etl_TAG}"
+    GIT_SHALLOW "${etl_SHALLOW}"
+    GIT_PROGRESS TRUE
+    # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
+    SOURCE_SUBDIR do_not_add_etl_subdir_yet
+)
+
 FetchContent_MakeAvailable(libtonc)
 FetchContent_MakeAvailable(aas)
+FetchContent_MakeAvailable(etl)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX
@@ -52,6 +62,13 @@ add_custom_target(aas ALL
   COMMAND ${CMAKE_COMMAND} -E copy_directory build/aas/include ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/include
   WORKING_DIRECTORY ${aas_SOURCE_DIR}
   DEPENDS libtonc
+)
+
+# Calling CMake from within CMake can't be right..
+add_custom_target(etl ALL
+  COMMAND ${CMAKE_COMMAND} -B build . -DCMAKE_INSTALL_PREFIX=${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t
+  COMMAND ${CMAKE_COMMAND} --install build
+  WORKING_DIRECTORY ${etl_SOURCE_DIR}
 )
 
 # install(FILES)
