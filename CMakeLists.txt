@@ -41,7 +41,7 @@ set(LLVM_DISTRIBUTION_COMPONENTS
     lld
     lldb
     lldb-server
-    lldb-vscode
+    lldb-dap
     llvm-ar
     llvm-config
     llvm-cov
