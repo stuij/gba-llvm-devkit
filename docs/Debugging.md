@@ -80,8 +80,8 @@ This plugin comes with an LLDB build that supports many architectures including
 Arm and is the option most people should choose.
 
 If you are developing the toolchain itself and making changes to LLDB, you can
-manually install the `lldb-vscode` plugin by following the instructions
-[here](https://github.com/llvm/llvm-project/tree/main/lldb/tools/lldb-vscode#installation-for-visual-studio-code). Using the `lldb-vscode` binary
+manually install the `lldb-dap` plugin by following the instructions
+[here](https://github.com/llvm/llvm-project/tree/main/lldb/tools/lldb-dap#installation-for-visual-studio-code). Using the `lldb-dap` binary
 from this toolchain.
 
 I will talk about both plugins here as they share a lot of the same
@@ -150,13 +150,13 @@ This is the content of `launch.json`:
       "postDebugTask": "stop-mgba"
     },
     {
-      "name": "mgba-lldb-vscode",
-      "type": "lldb-vscode",
-      "request": "launch",
+      "name": "mgba-lldb-dap",
+      "type": "lldb-dap",
+      "request": "attach",
       "program": "${workspaceFolder}/test.elf",
       "preLaunchTask": "run-mgba",
       "stopOnEntry": true,
-      "launchCommands": ["gdb-remote 2345"],
+      "attachCommands": ["gdb-remote 2345"],
       "postDebugTask": "stop-mgba"
     }
   ]
@@ -182,4 +182,4 @@ name given to the interrupt signal you the user just sent.
 # References
 
 * [CodeLLDB user manual](https://github.com/vadimcn/codelldb/blob/master/MANUAL.md)
-* [lldb-vscode](https://github.com/llvm/llvm-project/tree/main/lldb/tools/lldb-vscode)
+* [lldb-dap](https://github.com/llvm/llvm-project/tree/main/lldb/tools/lldb-dap)
