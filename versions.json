@@ -8,6 +8,14 @@
       "comment": "tagType can be branch, tag or commithash",
       "tagType": "branch",
       "tag": "main"
+    },
+    "llvm-project": {
+      "tagType": "tag",
+      "tag": "llvmorg-20.1.0"
+    },
+    "picolibc": {
+      "tagType": "commithash",
+      "tag": "e3a4f137d85c5e9"
     }
   }
 }
