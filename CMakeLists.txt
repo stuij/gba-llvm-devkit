@@ -102,10 +102,10 @@ include(ExternalProject)
 include(FetchContent)
 
 # Read which revisions of the repos to use.
-file(READ versions.json VERSIONS_JSON)
-function(read_repo_version output_variable_prefix repo)
-    string(JSON tag GET ${VERSIONS_JSON} "repos" "${repo}" "tag")
-    string(JSON tagType GET ${VERSIONS_JSON} "repos" "${repo}" "tagType")
+file(READ versions.json VERSIONZ_JSON)
+function(read_repo_versionz output_variable_prefix repo)
+    string(JSON tag GET ${VERSIONZ_JSON} "repos" "${repo}" "tag")
+    string(JSON tagType GET ${VERSIONZ_JSON} "repos" "${repo}" "tagType")
     if(tagType STREQUAL "commithash")
         # GIT_SHALLOW doesn't work with commit hashes.
         set(shallow OFF)
@@ -124,10 +124,10 @@ function(read_repo_version output_variable_prefix repo)
     set(${output_variable_prefix}_TAG "${tag}" PARENT_SCOPE)
     set(${output_variable_prefix}_SHALLOW "${shallow}" PARENT_SCOPE)
 endfunction()
-read_repo_version(bmt bmt)
+read_repo_versionz(bmt bmt)
 
 FetchContent_Declare(bmt
-    GIT_REPOSITORY https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm
+    GIT_REPOSITORY https://github.com/arm/arm-toolchain
     GIT_TAG "${bmt_TAG}"
     GIT_SHALLOW "${bmt_SHALLOW}"
     GIT_PROGRESS TRUE
@@ -211,7 +211,7 @@ set(LLDB_INCLUDE_TESTS OFF CACHE INTERNAL "")
 set(LLVM_TOOLCHAIN_LIBRARY_VARIANTS armv4t CACHE INTERNAL "")
 
 add_subdirectory(
-    ${bmt_SOURCE_DIR}
+    ${bmt_SOURCE_DIR}/arm-software/embedded
 )
 
 install(
