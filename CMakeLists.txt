@@ -34,10 +34,14 @@ else()
 endif()
 
 set(LLVM_DISTRIBUTION_COMPONENTS
-    clang-format
     clang-resource-headers
     clang
+    clangd
+    clang-check
+    clang-format
+    clang-scan-deps
     dsymutil
+    elf2bin
     lld
     lldb
     lldb-server
@@ -47,9 +51,8 @@ set(LLVM_DISTRIBUTION_COMPONENTS
     llvm-cov
     llvm-cxxfilt
     llvm-dwarfdump
+    llvm-mc
     llvm-nm
-    llvm-lto
-    llvm-lto2
     llvm-objcopy
     llvm-objdump
     llvm-profdata
@@ -65,7 +68,10 @@ set(LLVM_DISTRIBUTION_COMPONENTS
 )
 
 set(LLVM_TOOLCHAIN_DISTRIBUTION_COMPONENTS
+    llvm-toolchain-config-files
+    llvm-toolchain-docs
     llvm-toolchain-libs
+    llvm-toolchain-samples
     llvm-toolchain-third-party-licenses
     gba-toolchain
     gba-toolchain-third-party-licenses
@@ -102,10 +108,13 @@ include(ExternalProject)
 include(FetchContent)
 
 # Read which revisions of the repos to use.
-file(READ versions.json VERSIONS_JSON)
-function(read_repo_version output_variable_prefix repo)
-    string(JSON tag GET ${VERSIONS_JSON} "repos" "${repo}" "tag")
-    string(JSON tagType GET ${VERSIONS_JSON} "repos" "${repo}" "tagType")
+# Use a GBA-specific variable name to avoid conflicts with the
+# arm-toolchain embedded CMake utilities (which also define VERSIONS_JSON
+# and read_repo_version).
+file(READ versions.json GBA_VERSIONS_JSON)
+function(gba_read_repo_version output_variable_prefix repo)
+    string(JSON tag GET ${GBA_VERSIONS_JSON} "repos" "${repo}" "tag")
+    string(JSON tagType GET ${GBA_VERSIONS_JSON} "repos" "${repo}" "tagType")
     if(tagType STREQUAL "commithash")
         # GIT_SHALLOW doesn't work with commit hashes.
         set(shallow OFF)
@@ -124,16 +133,16 @@ function(read_repo_version output_variable_prefix repo)
     set(${output_variable_prefix}_TAG "${tag}" PARENT_SCOPE)
     set(${output_variable_prefix}_SHALLOW "${shallow}" PARENT_SCOPE)
 endfunction()
-read_repo_version(bmt bmt)
+gba_read_repo_version(bmt bmt)
 
 FetchContent_Declare(bmt
-    GIT_REPOSITORY https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm
+    GIT_REPOSITORY https://github.com/arm/arm-toolchain
     GIT_TAG "${bmt_TAG}"
     GIT_SHALLOW "${bmt_SHALLOW}"
     GIT_PROGRESS TRUE
     # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
-    # Add the llvm subdirectory later to ensure that
-    # BMT is the first project declared.
+    # Add the embedded subdirectory later to ensure that
+    # the arm-toolchain project is declared first.
     # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
     # can't be used.
     SOURCE_SUBDIR do_not_add_bmt_subdir_yet
@@ -145,10 +154,6 @@ FetchContent_Declare(tools
     GIT_SHALLOW "${tools_SHALLOW}"
     GIT_PROGRESS TRUE
     # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
-    # Add the llvm subdirectory later to ensure that
-    # LLVMEmbeddedToolchainForArm is the first project declared.
-    # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
-    # can't be used.
     SOURCE_SUBDIR do_not_add_tools_subdir_yet
 )
 
@@ -158,10 +163,6 @@ FetchContent_Declare(grit
     GIT_SHALLOW "${grit_SHALLOW}"
     GIT_PROGRESS TRUE
     # PATCH_COMMAND git reset --quiet --hard && git clean --quiet --force -dx
-    # Add the llvm subdirectory later to ensure that
-    # LLVMEmbeddedToolchainForArm is the first project declared.
-    # Otherwise CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
-    # can't be used.
     SOURCE_SUBDIR do_not_add_grit_subdir_yet
 )
 
@@ -199,8 +200,8 @@ set(CPACK_STRIP_FILES TRUE)
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY TRUE)
 set(CPACK_PACKAGE_NAME "gba-llvm-devkit")
 
-set(LLVM_ENABLE_PROJECTS clang;lld;lldb CACHE STRING "")
-set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
+set(LLVM_ENABLE_PROJECTS clang;clang-tools-extra;lld;lldb CACHE STRING "")
+set(LLDB_ENABLE_LIBXML2 ON CACHE BOOL "Enable LLDB's optional libxml2 support")
 # on MacOS we get warnings that LLDB tests won't pass properly
 # because of code signing. We disregard for now and see what happens.
 # set(LLDB_USE_SYSTEM_DEBUGSERVER ON CACHE STRING "")
@@ -208,10 +209,12 @@ set(LLDB_ENABLE_LIBXML2 ON CACHE INTERNAL "")
 # in the embedded toolchain configuration. So we go without for now.
 set(LLDB_INCLUDE_TESTS OFF CACHE INTERNAL "")
 
-set(LLVM_TOOLCHAIN_LIBRARY_VARIANTS armv4t CACHE INTERNAL "")
+set(LLVM_TOOLCHAIN_LIBRARY_VARIANTS armv4t_size CACHE INTERNAL "")
 
+# The embedded toolchain build scripts are in arm-software/embedded.
 add_subdirectory(
-    ${bmt_SOURCE_DIR}
+    ${bmt_SOURCE_DIR}/arm-software/embedded
+    ${CMAKE_CURRENT_BINARY_DIR}/arm-toolchain-embedded
 )
 
 install(
@@ -306,7 +309,7 @@ set(gba_sources ${CMAKE_SOURCE_DIR}/common)
 set(common ${CMAKE_SOURCE_DIR}/common)
 
 set(target_triple "armv4t-none-eabi")
-set(target_flags "-march=armv4t -fno-exceptions -fno-rtti --sysroot ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t")
+set(target_flags "-march=armv4t -fno-exceptions -fno-rtti --sysroot ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t_size")
 
 ExternalProject_Add(
   gba_sources
@@ -330,13 +333,15 @@ ExternalProject_Add(
   -DCMAKE_RANLIB=${LLVM_BINARY_DIR}/bin/llvm-ranlib${CMAKE_EXECUTABLE_SUFFIX}
   # Let CMake know we're cross-compiling
   -DCMAKE_SYSTEM_NAME=Generic
+  # Avoid linker-based compiler check (no linker script in test environment)
+  -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
   INSTALL_COMMAND echo "nop"
 )
 
 ExternalProject_Add_Step(
   gba_sources install_config
   COMMAND ${CMAKE_COMMAND} -E copy ${common}/${config} ${LLVM_BINARY_DIR}/bin
-  COMMAND ${CMAKE_COMMAND} -E copy ${common}/gba_cart.ld ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t/lib
+  COMMAND ${CMAKE_COMMAND} -E copy ${common}/gba_cart.ld ${LLVM_BINARY_DIR}/lib/clang-runtimes/arm-none-eabi/armv4t_size/lib
   DEPENDERS configure
 )
 
@@ -350,8 +355,8 @@ install(
 install(
    FILES
    ${common}/gba_cart.ld
-   DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t/lib
-   COMPONENT llvm-toolchain
+   DESTINATION lib/clang-runtimes/arm-none-eabi/armv4t_size/lib
+   COMPONENT llvm-toolchain-libs
 )
 
 install(

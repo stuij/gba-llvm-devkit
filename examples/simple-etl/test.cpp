@@ -1,3 +1,12 @@
+// Forward-declare std::tuple_size/tuple_element before ETL headers.
+// ETL with ETL_NO_STL + Clang >= 19 skips these declarations, but
+// still emits std-namespace specialisations that require them.
+#include <stddef.h>  // size_t
+namespace std {
+  template <typename T> struct tuple_size;
+  template <size_t I, typename T> struct tuple_element;
+}
+
 #include <etl/vector.h>
 #include <tonc.h>
 

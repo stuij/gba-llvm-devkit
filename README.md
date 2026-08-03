@@ -65,7 +65,7 @@ Which are:
 - `-mfpu=none`
 - `-fno-exceptions`
 - `-fno-rtti`
-- `--sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t`
+- `--sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t_size`
 - `-lcrt0-gba`
 - `-D_LIBCPP_AVAILABILITY_HAS_NO_VERBOSE_ABORT`
 
@@ -95,9 +95,9 @@ Furthermore the compiler should understand where it can find the correct
 libraries and headers. As Clang can potentially target multiple architectures
 and multiple library variants, we need to supply a `--sysroot` argument. the
 libraries for ARMv4T can be found at
-`<root>/lib/clang-runtimes/arm-none-eabi/armv4t`:
+`<root>/lib/clang-runtimes/arm-none-eabi/armv4t_size`:
 
-    --sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t
+    --sysroot <CFGDIR>/../lib/clang-runtimes/arm-none-eabi/armv4t_size
 
 Where \<CFGDIR> is a magic variable with points to the config file
 directory. This should be handled by Clang's multiboot, but there's currently an
@@ -120,7 +120,7 @@ compiler linking in symbols that don't exist, add:
 Speaks  somewhat for itself.
 
 The linker file can be found at
-`<root>/lib/clang-runtimes/arm-none-eabi/armv4t/lib/gba_cart.ld`. As we've set
+`<root>/lib/clang-runtimes/arm-none-eabi/armv4t_size/lib/gba_cart.ld`. As we've set
 `--sysroot`, the linker can resolve `gba_cart.ld`.
 
 In our example above, as we need to pass the linker file from the driver to the

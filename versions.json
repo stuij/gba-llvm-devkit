@@ -7,7 +7,7 @@
     "bmt": {
       "comment": "tagType can be branch, tag or commithash",
       "tagType": "branch",
-      "tag": "main"
+      "tag": "arm-software"
     }
   }
 }

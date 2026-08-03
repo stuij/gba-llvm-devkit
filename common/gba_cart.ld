@@ -280,10 +280,9 @@ SECTIONS
 	/* EZF Advance strips trailing 0xff bytes, add a pad section so nothing important is removed */
 	.pad ALIGN(4) : AT (__pad_lma)
 	{
-		LONG(0x52416b64)
-		LONG(0x4d)
+		*(.pad)
 		. = ALIGN(4);  /* REQUIRED. LD is flaky without it. */
-	} = 0xff
+	} >rom = 0xff
 	__rom_end__ = __pad_lma + SIZEOF(.pad);
 
 

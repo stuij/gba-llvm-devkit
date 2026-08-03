@@ -254,5 +254,10 @@ getpid:
 	.align
 	.pool
 
-.section .pad
+@ EZF Advance strips trailing 0xff bytes; place magic bytes in an allocatable
+@ .pad section so they survive objcopy -O binary and prevent stripping.
+.section .pad, "a"
+.long 0x52416b64
+.long 0x4d
 .end
+
