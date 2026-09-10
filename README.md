@@ -183,6 +183,29 @@ See the [debugging document](docs/Debugging.md).
 
 https://github.com/stuij/gba-llvm-devkit
 
+### Selecting the Arm Toolchain version
+
+Set repos -> bmt in `versions.json` before configuring. For example, to pin it
+to a release do:
+
+```json
+"bmt": {
+    "tagType": "tag",
+    "tag": "release-23.1.0-ATfE"
+}
+```
+
+`tagType` accepts `tag`, `branch`, or `commithash`. To follow a
+release branch, use `branch` with for example `release/arm-software/23.x`. To follow HEAD, use `branch` with `arm-software`.
+
+You can override downloading the toolchain repo by feeding CMake a toolchain path:
+
+```sh
+cmake -S . -B build-arm23 -G Ninja \
+    -DFETCHCONTENT_SOURCE_DIR_BMT=/path/to/arm-toolchain
+```
+
+
 ### Prerequisites
 
 Recent versions of the following tools are pre-requisites:

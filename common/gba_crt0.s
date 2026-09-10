@@ -260,4 +260,3 @@ getpid:
 .long 0x52416b64
 .long 0x4d
 .end
-
